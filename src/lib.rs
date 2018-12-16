@@ -4,6 +4,8 @@ use std::io::Read;
 use std::io;
 use std::collections::HashMap;
 use std::vec::Vec;
+use std::fs;
+use std::os::unix::fs::MetadataExt;
 
 /// buffer size for the digest computation
 const BUFFER_SIZE: usize = 1024 * 1024;
@@ -37,9 +39,16 @@ pub fn print_digests(paths: &[PathBuf]) -> io::Result<()> {
 pub fn find_file_duplicates(paths: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let mut file_map = HashMap::new();
+    let mut ino_map = HashMap::new();
     for path in paths {
-        let sha1 = file_digest(&path)?;
-        file_map.entry(sha1).or_insert_with(Vec::new).push(path.clone());
+        let inode = fs::metadata(path)?.ino();
+        // let digest = ino_map.get(&inode).unwrap_or_else(|| file_digest(&path)?);
+        let digest = match ino_map.get(&inode) {
+            Some(v) => *v,
+            None => file_digest(&path)?
+        };
+        file_map.entry(digest).or_insert_with(Vec::new).push(path.clone());
+        ino_map.insert(inode, digest);
     }
     // then just keep the path with duplicates
     let mut res = Vec::<Vec<PathBuf>>::new();
