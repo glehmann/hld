@@ -1,0 +1,71 @@
+use std::path::PathBuf;
+use std::fs::File;
+use std::io::Read;
+use std::io;
+use std::collections::HashMap;
+use std::vec::Vec;
+
+/// buffer size for the digest computation
+const BUFFER_SIZE: usize = 1024 * 1024;
+
+/// compute the digest of a file
+pub fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
+        let mut f = File::open(path)?;
+        let mut buffer = [0; BUFFER_SIZE];
+        let mut m = sha1::Sha1::new();
+        loop {
+            let size = f.read(&mut buffer)?;
+            if size == 0 {
+                break;
+            }
+            m.update(&buffer[0..size]);
+        }
+        Ok(m.digest())
+}
+
+/// print the file digests
+pub fn print_digests(paths: &[PathBuf]) -> io::Result<()> {
+    for path in paths {
+        let sha1 = file_digest(&path)?;
+        println!("{}  {}", sha1, path.display());
+    }
+    println!("{:?}", find_file_duplicates(paths));
+    Ok(())
+}
+
+/// find the duplicates in the provided paths
+pub fn find_file_duplicates(paths: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> {
+    // compute a map of the digests to the path with that digest
+    let mut file_map = HashMap::new();
+    for path in paths {
+        let sha1 = file_digest(&path)?;
+        file_map.entry(sha1).or_insert_with(Vec::new).push(path.clone());
+    }
+    // then just keep the path with duplicates
+    let mut res = Vec::<Vec<PathBuf>>::new();
+    for (_, v) in file_map {
+        if v.len() >= 2 {
+            res.push(v);
+        }
+    }
+    Ok(res)
+}
+
+/// find the duplicated files and replace them with hardlinks
+pub fn hardlink_deduplicate(paths: &[PathBuf], verbose: bool) -> io::Result<()> {
+    let dups = find_file_duplicates(paths)?;
+    for dup in dups {
+        file_hardlinks(&dup[0], &dup[1..], verbose)?;
+    }
+    Ok(())
+}
+
+pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf], verbose: bool) -> io::Result<()> {
+    for hardlink in hardlinks {
+        if verbose {
+            println!("{} -> {}", hardlink.display(), path.display());
+        }
+//        std::fs::hard_link(path, hardlink)?;
+    }
+    Ok(())
+}

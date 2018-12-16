@@ -1,0 +1,8 @@
+[package]
+name = "hld"
+version = "0.1.0"
+authors = ["Gaëtan Lehmann <gaetan.lehmann@gmail.com>"]
+
+[dependencies]
+sha1 = "0.6.0"
+structopt = "0.2"
