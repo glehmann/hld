@@ -61,19 +61,17 @@ pub fn find_file_duplicates(paths: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> 
 }
 
 /// find the duplicated files and replace them with hardlinks
-pub fn hardlink_deduplicate(paths: &[PathBuf], verbose: bool) -> io::Result<()> {
+pub fn hardlink_deduplicate(paths: &[PathBuf]) -> io::Result<()> {
     let dups = find_file_duplicates(paths)?;
     for dup in dups {
-        file_hardlinks(&dup[0], &dup[1..], verbose)?;
+        file_hardlinks(&dup[0], &dup[1..])?;
     }
     Ok(())
 }
 
-pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf], verbose: bool) -> io::Result<()> {
+pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
     for hardlink in hardlinks {
-        if verbose {
-            println!("{} -> {}", hardlink.display(), path.display());
-        }
+        info!("{} -> {}", hardlink.display(), path.display());
 //        std::fs::hard_link(path, hardlink)?;
     }
     Ok(())

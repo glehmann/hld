@@ -1,8 +1,11 @@
 extern crate structopt;
+#[macro_use]
+extern crate log;
 extern crate sha1;
+extern crate loggerv;
 
 mod cli;
-mod lib;
+mod hld;
 
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -25,8 +28,22 @@ pub struct Config {
 
 
 fn main() {
-    let opt = Config::from_args();
-    lib::hardlink_deduplicate(&opt.files, opt.verbose).unwrap_or_else(|err| {
+    let args = Config::from_args();
+    // opt.verbose.setup_env_logger("hld");
+    loggerv::Logger::new()
+        .max_level(if args.verbose {
+            log::Level::Info
+         }
+         else {
+             log::Level::Warn
+        })
+        .module_path(false)
+        .level(true)
+        // .verbosity(args.occurrences_of("v"))
+        // .line_numbers(true)
+        .init()
+        .unwrap();
+    hld::hardlink_deduplicate(&args.files).unwrap_or_else(|err| {
         println!("{}", err);
         process::exit(1);
     });
