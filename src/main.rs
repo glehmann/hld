@@ -23,7 +23,7 @@ pub struct Config {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    /// Activate verbose mode
+    /// Recursively find the files in the provided paths
     #[structopt(short = "r", long = "recursive")]
     recursive: bool,
 }
