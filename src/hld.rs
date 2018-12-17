@@ -73,10 +73,13 @@ pub fn hardlink_deduplicate(paths: &[PathBuf]) -> io::Result<()> {
 }
 
 pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
+    let inode = fs::metadata(path)?.ino();
     for hardlink in hardlinks {
-        info!("{} -> {}", hardlink.display(), path.display());
-        std::fs::remove_file(hardlink)?;
-        std::fs::hard_link(path, hardlink)?;
+        if fs::metadata(hardlink)?.ino() != inode {
+            info!("{} -> {}", hardlink.display(), path.display());
+            std::fs::remove_file(hardlink)?;
+            std::fs::hard_link(path, hardlink)?;
+        }
     }
     Ok(())
 }
