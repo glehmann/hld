@@ -75,7 +75,8 @@ pub fn hardlink_deduplicate(paths: &[PathBuf]) -> io::Result<()> {
 pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
     for hardlink in hardlinks {
         info!("{} -> {}", hardlink.display(), path.display());
-        //        std::fs::hard_link(path, hardlink)?;
+        std::fs::remove_file(hardlink)?;
+        std::fs::hard_link(path, hardlink)?;
     }
     Ok(())
 }
