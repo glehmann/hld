@@ -13,7 +13,6 @@ use structopt::StructOpt;
 
 /// Hard Link Deduplicator
 #[derive(StructOpt, Debug)]
-#[structopt(name = "basic")]
 pub struct Config {
     /// Files to process
     #[structopt(name = "FILE", parse(from_os_str))]
