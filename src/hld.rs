@@ -86,15 +86,10 @@ pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
 }
 
 pub fn dirs_to_files(paths: &Vec<PathBuf>) -> io::Result<Vec<PathBuf>> {
-    let mut res = Vec::<PathBuf>::new();
-    for path in paths {
-        for f in WalkDir::new(path) {
-            if let Ok(f) = f {
-                if f.metadata()?.file_type().is_file() {
-                    res.push(f.path().to_path_buf());
-                }
-            }
-        }
-    }
-    Ok(res)
+    Ok(paths
+        .into_iter()
+        .flat_map(|d| WalkDir::new(d).into_iter().filter_map(|f| f.ok()))
+        .map(|f| f.path().to_path_buf())
+        .filter(|f| f.metadata().unwrap().file_type().is_file())
+        .collect())
 }
