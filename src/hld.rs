@@ -6,7 +6,7 @@ use std::io::Read;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::vec::Vec;
-use walkdir::{DirEntry, WalkDir};
+use walkdir::WalkDir;
 
 /// buffer size for the digest computation
 const BUFFER_SIZE: usize = 1024 * 1024;
@@ -26,15 +26,15 @@ pub fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
     Ok(m.digest())
 }
 
-/// print the file digests
-pub fn print_digests(paths: &[PathBuf]) -> io::Result<()> {
-    for path in paths {
-        let sha1 = file_digest(&path)?;
-        println!("{}  {}", sha1, path.display());
-    }
-    println!("{:?}", find_file_duplicates(paths));
-    Ok(())
-}
+// /// print the file digests
+// pub fn print_digests(paths: &[PathBuf]) -> io::Result<()> {
+//     for path in paths {
+//         let sha1 = file_digest(&path)?;
+//         println!("{}  {}", sha1, path.display());
+//     }
+//     println!("{:?}", find_file_duplicates(paths));
+//     Ok(())
+// }
 
 /// find the duplicates in the provided paths
 pub fn find_file_duplicates(paths: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> {
