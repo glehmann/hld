@@ -6,6 +6,7 @@ use std::io::Read;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::vec::Vec;
+use walkdir::{DirEntry, WalkDir};
 
 /// buffer size for the digest computation
 const BUFFER_SIZE: usize = 1024 * 1024;
@@ -82,4 +83,18 @@ pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+pub fn dirs_to_files(paths: &Vec<PathBuf>) -> io::Result<Vec<PathBuf>> {
+    let mut res = Vec::<PathBuf>::new();
+    for path in paths {
+        for f in WalkDir::new(path) {
+            if let Ok(f) = f {
+                if f.metadata()?.file_type().is_file() {
+                    res.push(f.path().to_path_buf());
+                }
+            }
+        }
+    }
+    Ok(res)
 }
