@@ -8,30 +8,13 @@ extern crate walkdir;
 mod cli;
 mod hld;
 
-use std::path::PathBuf;
 use std::process;
 use structopt::StructOpt;
-
-/// Hard Link Deduplicator
-#[derive(StructOpt, Debug)]
-pub struct Config {
-    /// Files to process
-    #[structopt(name = "FILE", parse(from_os_str))]
-    files: Vec<PathBuf>,
-
-    /// Activate verbose mode
-    #[structopt(short = "v", long = "verbose")]
-    verbose: bool,
-
-    /// Recursively find the files in the provided paths
-    #[structopt(short = "r", long = "recursive")]
-    recursive: bool,
-}
 
 // use cli::Config;use std::process;
 
 fn main() {
-    let args = Config::from_args();
+    let args = cli::Config::from_args();
     // opt.verbose.setup_env_logger("hld");
     loggerv::Logger::new()
         .max_level(if args.verbose {
