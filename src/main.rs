@@ -40,8 +40,8 @@ fn main() {
         // .line_numbers(true)
         .init()
         .unwrap();
-    hld::hardlink_deduplicate(&args.files).unwrap_or_else(|err| {
+    if let Err(err) = hld::hardlink_deduplicate(&args.files) {
         println!("{}", err);
         process::exit(1);
-    });
+    }
 }
