@@ -47,7 +47,7 @@ fn main() {
         .unwrap();
 
     let files = if args.recursive {
-        hld::dirs_to_files(&args.files).unwrap()
+        hld::dirs_to_files(&args.files)
     } else {
         args.files
     };
