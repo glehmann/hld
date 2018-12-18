@@ -42,6 +42,10 @@ pub fn find_file_duplicates(paths: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> 
     let mut file_map = HashMap::new();
     let mut ino_map = HashMap::new();
     for path in paths {
+        if fs::metadata(path)?.len() == 0 {
+            // don't hardlink empty files
+            continue;
+        }
         let inode = inos(path)?;
         // let digest = ino_map.get(&inode).unwrap_or_else(|| file_digest(&path)?);
         let digest = match ino_map.get(&inode) {
