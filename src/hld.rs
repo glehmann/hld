@@ -14,7 +14,7 @@ use fs2::FileExt;
 const BUFFER_SIZE: usize = 1024 * 1024;
 
 /// compute the digest of a file
-pub fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
+fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
     let mut f = File::open(path)?;
     let mut buffer = [0; BUFFER_SIZE];
     let mut m = sha1::Sha1::new();
@@ -29,7 +29,7 @@ pub fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
 }
 
 // /// print the file digests
-// pub fn print_digests(paths: &[PathBuf]) -> io::Result<()> {
+// fn print_digests(paths: &[PathBuf]) -> io::Result<()> {
 //     for path in paths {
 //         let sha1 = file_digest(&path)?;
 //         println!("{}  {}", sha1, path.display());
@@ -39,7 +39,7 @@ pub fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
 // }
 
 /// find the duplicates in the provided paths
-pub fn find_file_duplicates(
+fn find_file_duplicates(
     paths: &[PathBuf],
     caches: &[PathBuf],
 ) -> io::Result<Vec<Vec<PathBuf>>> {
@@ -80,7 +80,7 @@ pub fn find_file_duplicates(
 
 const CACHE_PATH: &str = "/tmp/hld.cache";
 
-pub fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>> {
+fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>> {
     let cache = if let Ok(cache_reader) = File::open(CACHE_PATH) {
         let foo: HashMap<PathBuf, sha1::Digest> =
             serde_json::from_reader(cache_reader).unwrap_or_default();
@@ -118,7 +118,7 @@ pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result
     Ok(())
 }
 
-pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
+fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
     let inode = inos(path)?;
     for hardlink in hardlinks {
         let hinode = inos(hardlink)?;
@@ -141,7 +141,7 @@ pub fn glob_to_files(paths: &Vec<String>) -> Result<Vec<PathBuf>, glob::PatternE
 }
 
 /// returns the inodes of the partition and of the file
-pub fn inos(path: &PathBuf) -> io::Result<(u64, u64)> {
+fn inos(path: &PathBuf) -> io::Result<(u64, u64)> {
     let metadata = fs::metadata(path)?;
     Ok((metadata.st_dev(), metadata.ino()))
 }
