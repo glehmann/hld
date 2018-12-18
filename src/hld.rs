@@ -7,6 +7,7 @@ use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::vec::Vec;
 use walkdir::WalkDir;
+use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 
 /// buffer size for the digest computation
 const BUFFER_SIZE: usize = 1024 * 1024;
@@ -42,7 +43,7 @@ pub fn find_file_duplicates(paths: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> 
     let mut file_map = HashMap::new();
     let mut ino_map = HashMap::new();
     for path in paths {
-        let inode = fs::metadata(path)?.ino();
+        let inode = inos(path)?;
         // let digest = ino_map.get(&inode).unwrap_or_else(|| file_digest(&path)?);
         let digest = match ino_map.get(&inode) {
             Some(v) => *v,
@@ -74,9 +75,10 @@ pub fn hardlink_deduplicate(paths: &[PathBuf]) -> io::Result<()> {
 }
 
 pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
-    let inode = fs::metadata(path)?.ino();
+    let inode = inos(path)?;
     for hardlink in hardlinks {
-        if fs::metadata(hardlink)?.ino() != inode {
+        let hinode = inos(hardlink)?;
+        if hinode != inode && hinode.0 == inode.0 {
             info!("{} -> {}", hardlink.display(), path.display());
             std::fs::remove_file(hardlink)?;
             std::fs::hard_link(path, hardlink)?;
@@ -92,4 +94,10 @@ pub fn dirs_to_files(paths: &Vec<PathBuf>) -> Vec<PathBuf> {
         .map(|f| f.path().to_path_buf())
         .filter(|f| f.metadata().unwrap().file_type().is_file())
         .collect()
+}
+
+/// returns the inodes of the partition and of the file
+pub fn inos(path: &PathBuf) -> io::Result<(u64, u64)> {
+    let metadata = fs::metadata(path)?;
+    Ok((metadata.st_dev(), metadata.ino()))
 }
