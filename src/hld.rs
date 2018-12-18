@@ -8,6 +8,7 @@ use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::vec::Vec;
+use fs2::FileExt;
 
 /// buffer size for the digest computation
 const BUFFER_SIZE: usize = 1024 * 1024;
@@ -96,7 +97,10 @@ pub fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Dige
             entry.insert(digest);
         }
     }
-    serde_json::to_writer_pretty(File::create(CACHE_PATH)?, &cache)?;
+    let output_file = File::create(CACHE_PATH)?;
+    output_file.lock_exclusive()?;
+    serde_json::to_writer_pretty(&output_file, &cache)?;
+    output_file.unlock()?;
     Ok(cache)
 }
 

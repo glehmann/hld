@@ -5,6 +5,7 @@ extern crate glob;
 extern crate loggerv;
 extern crate serde_json;
 extern crate sha1;
+extern crate fs2;
 
 mod cli;
 mod hld;
