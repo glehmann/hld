@@ -7,7 +7,6 @@ use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::vec::Vec;
-use walkdir::WalkDir;
 
 /// buffer size for the digest computation
 const BUFFER_SIZE: usize = 1024 * 1024;
@@ -87,13 +86,13 @@ pub fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
     Ok(())
 }
 
-pub fn dirs_to_files(paths: &Vec<PathBuf>) -> Vec<PathBuf> {
-    paths
+pub fn glob_to_files(paths: &Vec<String>) -> Result<Vec<PathBuf>, glob::PatternError> {
+    Ok(paths
         .into_iter()
-        .flat_map(|d| WalkDir::new(d).into_iter().filter_map(|f| f.ok()))
-        .map(|f| f.path().to_path_buf())
+        .flat_map(|g| glob::glob(g).unwrap().into_iter().filter_map(|f| f.ok()))
+        .map(|f| f.to_path_buf())
         .filter(|f| f.metadata().unwrap().file_type().is_file())
-        .collect()
+        .collect())
 }
 
 /// returns the inodes of the partition and of the file

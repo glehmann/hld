@@ -1,9 +1,9 @@
 extern crate structopt;
 #[macro_use]
 extern crate log;
+extern crate glob;
 extern crate loggerv;
 extern crate sha1;
-extern crate walkdir;
 
 mod cli;
 mod hld;
@@ -25,11 +25,12 @@ fn main() {
         .init()
         .unwrap();
 
-    let files = if args.recursive {
-        hld::dirs_to_files(&args.files)
+    let globs = if args.recursive {
+        args.files.iter().map(|d| format!("{}/**/*", d)).collect()
     } else {
         args.files
     };
+    let files = hld::glob_to_files(&globs).unwrap();
     if let Err(err) = hld::hardlink_deduplicate(&files) {
         println!("{}", err);
         std::process::exit(1);

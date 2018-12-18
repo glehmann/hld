@@ -1,12 +1,11 @@
-use std::path::PathBuf;
 use structopt::StructOpt;
 
 /// Hard Link Deduplicator
 #[derive(StructOpt, Debug)]
 pub struct Config {
     /// Files to process
-    #[structopt(name = "FILE", parse(from_os_str))]
-    pub files: Vec<PathBuf>,
+    #[structopt(name = "FILE")]
+    pub files: Vec<String>,
 
     /// Activate verbose mode
     #[structopt(short = "v", long = "verbose")]
