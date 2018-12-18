@@ -3,11 +3,11 @@ use std::fs;
 use std::fs::File;
 use std::io;
 use std::io::Read;
+use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::vec::Vec;
 use walkdir::WalkDir;
-use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 
 /// buffer size for the digest computation
 const BUFFER_SIZE: usize = 1024 * 1024;
