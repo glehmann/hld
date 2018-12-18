@@ -1,11 +1,11 @@
 extern crate structopt;
 #[macro_use]
 extern crate log;
+extern crate fs2;
 extern crate glob;
 extern crate loggerv;
 extern crate serde_json;
 extern crate sha1;
-extern crate fs2;
 
 mod cli;
 mod hld;

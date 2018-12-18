@@ -1,3 +1,4 @@
+use fs2::FileExt;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fs;
@@ -8,7 +9,6 @@ use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::vec::Vec;
-use fs2::FileExt;
 
 /// buffer size for the digest computation
 const BUFFER_SIZE: usize = 1024 * 1024;
@@ -39,10 +39,7 @@ fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
 // }
 
 /// find the duplicates in the provided paths
-fn find_file_duplicates(
-    paths: &[PathBuf],
-    caches: &[PathBuf],
-) -> io::Result<Vec<Vec<PathBuf>>> {
+fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let mut file_map = HashMap::new();
     let mut ino_map = HashMap::new();
@@ -90,7 +87,8 @@ fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>>
         foo
     };
     // remove dead entries
-    let mut cache: HashMap<PathBuf, sha1::Digest> = cache.into_iter()
+    let mut cache: HashMap<PathBuf, sha1::Digest> = cache
+        .into_iter()
         // TODO: how do we match a tuple here? .filter(|(path, _)| path.exists())
         .filter(|e| e.0.exists())
         .collect();
