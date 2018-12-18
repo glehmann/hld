@@ -81,7 +81,7 @@ pub fn find_file_duplicates(
 const CACHE_PATH: &str = "/tmp/hld.cache";
 
 pub fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>> {
-    let mut cache = if let Ok(cache_reader) = File::open(CACHE_PATH) {
+    let cache = if let Ok(cache_reader) = File::open(CACHE_PATH) {
         let foo: HashMap<PathBuf, sha1::Digest> =
             serde_json::from_reader(cache_reader).unwrap_or_default();
         foo
@@ -89,6 +89,11 @@ pub fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Dige
         let foo: HashMap<PathBuf, sha1::Digest> = HashMap::new();
         foo
     };
+    // remove dead entries
+    let mut cache: HashMap<PathBuf, sha1::Digest> = cache.into_iter()
+        // TODO: how do we match a tuple here? .filter(|(path, _)| path.exists())
+        .filter(|e| e.0.exists())
+        .collect();
     // paths.iter().for_each(|path| cache.entry(path.clone()).or_insert_with(|| file_digest(&path)?));
     for path in paths {
         let entry = cache.entry(path.clone());
