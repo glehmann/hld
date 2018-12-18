@@ -8,14 +8,10 @@ extern crate walkdir;
 mod cli;
 mod hld;
 
-use std::process;
 use structopt::StructOpt;
-
-// use cli::Config;use std::process;
 
 fn main() {
     let args = cli::Config::from_args();
-    // opt.verbose.setup_env_logger("hld");
     loggerv::Logger::new()
         .max_level(if args.verbose {
             log::Level::Info
@@ -36,6 +32,6 @@ fn main() {
     };
     if let Err(err) = hld::hardlink_deduplicate(&files) {
         println!("{}", err);
-        process::exit(1);
+        std::process::exit(1);
     }
 }
