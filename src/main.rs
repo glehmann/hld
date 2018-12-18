@@ -3,6 +3,7 @@ extern crate structopt;
 extern crate log;
 extern crate glob;
 extern crate loggerv;
+extern crate serde_json;
 extern crate sha1;
 
 mod cli;
@@ -25,13 +26,19 @@ fn main() {
         .init()
         .unwrap();
 
-    let globs = if args.recursive {
+    let file_globs = if args.recursive {
         args.files.iter().map(|d| format!("{}/**/*", d)).collect()
     } else {
         args.files
     };
-    let files = hld::glob_to_files(&globs).unwrap();
-    if let Err(err) = hld::hardlink_deduplicate(&files) {
+    let cache_globs = if args.recursive {
+        args.caches.iter().map(|d| format!("{}/**/*", d)).collect()
+    } else {
+        args.caches
+    };
+    let files = hld::glob_to_files(&file_globs).unwrap();
+    let caches = hld::glob_to_files(&cache_globs).unwrap();
+    if let Err(err) = hld::hardlink_deduplicate(&files, &caches) {
         println!("{}", err);
         std::process::exit(1);
     }

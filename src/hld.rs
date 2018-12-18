@@ -1,3 +1,4 @@
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -37,20 +38,28 @@ pub fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
 // }
 
 /// find the duplicates in the provided paths
-pub fn find_file_duplicates(paths: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> {
+pub fn find_file_duplicates(
+    paths: &[PathBuf],
+    caches: &[PathBuf],
+) -> io::Result<Vec<Vec<PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let mut file_map = HashMap::new();
     let mut ino_map = HashMap::new();
+    let cache = update_cache(caches)?;
     for path in paths {
         if fs::metadata(path)?.len() == 0 {
             // don't hardlink empty files
             continue;
         }
         let inode = inos(path)?;
-        // let digest = ino_map.get(&inode).unwrap_or_else(|| file_digest(&path)?);
-        let digest = match ino_map.get(&inode) {
-            Some(v) => *v,
-            None => file_digest(&path)?,
+        let digest = if let Some(digest) = cache.get(path) {
+            *digest
+        } else {
+            // let digest = ino_map.get(&inode).unwrap_or_else(|| file_digest(&path)?);
+            match ino_map.get(&inode) {
+                Some(v) => *v,
+                None => file_digest(&path)?,
+            }
         };
         file_map
             .entry(digest)
@@ -68,9 +77,32 @@ pub fn find_file_duplicates(paths: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> 
     Ok(res)
 }
 
+const CACHE_PATH: &str = "/tmp/hld.cache";
+
+pub fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>> {
+    let mut cache = if let Ok(cache_reader) = File::open(CACHE_PATH) {
+        let foo: HashMap<PathBuf, sha1::Digest> =
+            serde_json::from_reader(cache_reader).unwrap_or_default();
+        foo
+    } else {
+        let foo: HashMap<PathBuf, sha1::Digest> = HashMap::new();
+        foo
+    };
+    // paths.iter().for_each(|path| cache.entry(path.clone()).or_insert_with(|| file_digest(&path)?));
+    for path in paths {
+        let entry = cache.entry(path.clone());
+        if let Entry::Vacant(entry) = entry {
+            let digest = file_digest(&path)?;
+            entry.insert(digest);
+        }
+    }
+    serde_json::to_writer_pretty(File::create(CACHE_PATH)?, &cache)?;
+    Ok(cache)
+}
+
 /// find the duplicated files and replace them with hardlinks
-pub fn hardlink_deduplicate(paths: &[PathBuf]) -> io::Result<()> {
-    let dups = find_file_duplicates(paths)?;
+pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<()> {
+    let dups = find_file_duplicates(paths, caches)?;
     for dup in dups {
         file_hardlinks(&dup[0], &dup[1..])?;
     }

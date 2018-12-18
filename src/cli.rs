@@ -7,6 +7,10 @@ pub struct Config {
     #[structopt(name = "FILE")]
     pub files: Vec<String>,
 
+    /// Files to cache
+    #[structopt(short = "-c", long = "cache")]
+    pub caches: Vec<String>,
+
     /// Activate verbose mode
     #[structopt(short = "v", long = "verbose")]
     pub verbose: bool,
