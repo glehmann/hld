@@ -65,14 +65,12 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
             .push(path.clone());
         ino_map.insert(inode, digest);
     }
-    // then just keep the path with duplicates
-    let mut res = Vec::<Vec<PathBuf>>::new();
-    for (_, v) in file_map {
-        if v.len() >= 2 {
-            res.push(v);
-        }
-    }
-    Ok(res)
+    // then just keep the paths with duplicates
+    Ok(file_map
+        .into_iter()
+        .filter(|(_, v)| v.len() >= 2)
+        .map(|(_, v)| v)
+        .collect())
 }
 
 const CACHE_PATH: &str = "/tmp/hld.cache";
