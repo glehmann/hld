@@ -4,6 +4,8 @@ extern crate log;
 extern crate fs2;
 extern crate glob;
 extern crate loggerv;
+extern crate num_cpus;
+extern crate rayon;
 extern crate serde_json;
 extern crate sha1;
 
@@ -27,6 +29,12 @@ fn main() {
         .init()
         .unwrap();
 
+    if let Some(parallel) = args.parallel {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(parallel)
+            .build_global()
+            .unwrap();
+    }
     let file_globs = if args.recursive {
         args.files.iter().map(|d| format!("{}/**/*", d)).collect()
     } else {

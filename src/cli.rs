@@ -18,4 +18,8 @@ pub struct Config {
     /// Recursively find the files in the provided paths
     #[structopt(short = "r", long = "recursive")]
     pub recursive: bool,
+
+    /// Parallelism level
+    #[structopt(short = "j", long = "parallel")]
+    pub parallel: Option<usize>,
 }
