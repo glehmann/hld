@@ -44,27 +44,30 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
     let mut file_map = HashMap::new();
     let mut ino_map = HashMap::new();
     let cache = update_cache(caches)?;
-    for path in paths {
-        if fs::metadata(path)?.len() == 0 {
+    paths
+        .iter()
+        .map(|path| -> io::Result<()> {
             // don't hardlink empty files
-            continue;
-        }
-        let inode = inos(path)?;
-        let digest = if let Some(digest) = cache.get(path) {
-            *digest
-        } else {
-            // let digest = ino_map.get(&inode).unwrap_or_else(|| file_digest(&path)?);
-            match ino_map.get(&inode) {
-                Some(v) => *v,
-                None => file_digest(&path)?,
+            if fs::metadata(path)?.len() > 0 {
+                let inode = inos(path)?;
+                let digest = if let Some(digest) = cache.get(path) {
+                    *digest
+                } else {
+                    // ino_map.get(&inode).unwrap_or_else(|| file_digest(&path)?)
+                    match ino_map.get(&inode) {
+                        Some(v) => *v,
+                        None => file_digest(&path)?,
+                    }
+                };
+                file_map
+                    .entry(digest)
+                    .or_insert_with(Vec::new)
+                    .push(path.clone());
+                ino_map.insert(inode, digest);
             }
-        };
-        file_map
-            .entry(digest)
-            .or_insert_with(Vec::new)
-            .push(path.clone());
-        ino_map.insert(inode, digest);
-    }
+            Ok(())
+        })
+        .collect::<Result<Vec<_>, _>>()?;
     // then just keep the paths with duplicates
     Ok(file_map
         .into_iter()
