@@ -89,8 +89,7 @@ fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>>
     // remove dead entries
     let mut cache: HashMap<PathBuf, sha1::Digest> = cache
         .into_iter()
-        // TODO: how do we match a tuple here? .filter(|(path, _)| path.exists())
-        .filter(|e| e.0.exists())
+        .filter(|(path, _)| path.exists())
         .collect();
     // paths.iter().for_each(|path| cache.entry(path.clone()).or_insert_with(|| file_digest(&path)?));
     for path in paths {
