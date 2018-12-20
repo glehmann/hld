@@ -59,16 +59,12 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
                 let digest = if let Some(digest) = cache.get(path) {
                     *digest
                 } else {
-                    // ino_map.get(&inode).unwrap_or_else(|| file_digest(&path)?)
                     let ino_digest = ino_map
                         .lock()
                         .unwrap()
                         .get(&inode)
                         .map_or(None, |v| Some(*v));
-                    match ino_digest {
-                        Some(v) => v,
-                        None => file_digest(&path)?,
-                    }
+                    ino_digest.map_or_else(|| file_digest(&path), |v| Ok(v))?
                 };
                 file_map
                     .lock()
