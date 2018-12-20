@@ -48,24 +48,28 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
     let res = paths
         .par_iter()
         .map(|path| -> io::Result<HashMap<_, _>> {
-            let inode = inos(&path)?;
-            let ino_digest: Option<sha1::Digest> = ino_map
-                .lock()
-                .unwrap()
-                .get(&inode)
-                .map_or(None, |v| Some(*v));
-            let digest = if let Some(digest) = ino_digest {
-                digest
+            if fs::metadata(&path)?.len() == 0 {
+                Ok(hashmap! {})
             } else {
-                let digest = if let Some(digest) = cache.get(path) {
-                    *digest
+                let inode = inos(&path)?;
+                let ino_digest: Option<sha1::Digest> = ino_map
+                    .lock()
+                    .unwrap()
+                    .get(&inode)
+                    .map_or(None, |v| Some(*v));
+                let digest = if let Some(digest) = ino_digest {
+                    digest
                 } else {
-                    file_digest(&path)?
+                    let digest = if let Some(digest) = cache.get(path) {
+                        *digest
+                    } else {
+                        file_digest(&path)?
+                    };
+                    ino_map.lock().unwrap().insert(inode, digest);
+                    digest
                 };
-                ino_map.lock().unwrap().insert(inode, digest);
-                digest
-            };
-            Ok(hashmap! {digest => vec![path.clone()]})
+                Ok(hashmap! {digest => vec![path.clone()]})
+            }
         })
         .reduce(
             || Ok(hashmap! {}),
