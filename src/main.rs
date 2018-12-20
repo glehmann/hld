@@ -8,6 +8,8 @@ extern crate num_cpus;
 extern crate rayon;
 extern crate serde_json;
 extern crate sha1;
+#[macro_use]
+extern crate maplit;
 
 mod cli;
 mod hld;

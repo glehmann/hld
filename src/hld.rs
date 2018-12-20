@@ -43,40 +43,40 @@ fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
 /// find the duplicates in the provided paths
 fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> {
     // compute a map of the digests to the path with that digest
-    let file_map = Mutex::new(HashMap::new());
     let ino_map = Mutex::new(HashMap::new());
     let cache = update_cache(caches)?;
-    paths
+    let res = paths
         .par_iter()
-        .map(|path| -> io::Result<()> {
-            let path = path.clone();
-            // don't hardlink empty files
-            if fs::metadata(&path)?.len() > 0 {
-                let inode = inos(&path)?;
-                let digest = if let Some(digest) = cache.get(&path) {
-                    *digest
-                } else {
-                    let ino_digest = ino_map
-                        .lock()
-                        .unwrap()
-                        .get(&inode)
-                        .map_or(None, |v| Some(*v));
-                    let digest = ino_digest.map_or_else(|| file_digest(&path), |v| Ok(v))?;
-                    ino_map.lock().unwrap().insert(inode, digest);
-                    digest
-                };
-                file_map
+        .map(|path| -> io::Result<HashMap<_, _>> {
+            let inode = inos(&path)?;
+            let digest = if let Some(digest) = cache.get(path) {
+                *digest
+            } else {
+                let ino_digest = ino_map
                     .lock()
                     .unwrap()
-                    .entry(digest)
-                    .or_insert_with(Vec::new)
-                    .push(path.clone());
-            }
-            Ok(())
+                    .get(&inode)
+                    .map_or(None, |v| Some(*v));
+                let digest = ino_digest.map_or_else(|| file_digest(&path), |v| Ok(v))?;
+                ino_map.lock().unwrap().insert(inode, digest);
+                digest
+            };
+            Ok(hashmap! {digest => vec![path.clone()]})
         })
-        .collect::<Result<Vec<_>, _>>()?;
+        .reduce(
+            || Ok(hashmap! {}),
+            |a, b| {
+                let mut tmp = hashmap! {};
+                a?.into_iter().for_each(|(digest, paths)| {
+                    tmp.entry(digest).or_insert_with(Vec::new).extend(paths)
+                });
+                b?.into_iter().for_each(|(digest, paths)| {
+                    tmp.entry(digest).or_insert_with(Vec::new).extend(paths)
+                });
+                Ok(tmp)
+            },
+        )?;
     // then just keep the paths with duplicates
-    let res = file_map.lock().unwrap().clone();
     Ok(res
         .into_iter()
         .filter(|(_, v)| v.len() >= 2)
