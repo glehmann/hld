@@ -61,7 +61,9 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
                         .unwrap()
                         .get(&inode)
                         .map_or(None, |v| Some(*v));
-                    ino_digest.map_or_else(|| file_digest(&path), |v| Ok(v))?
+                    let digest = ino_digest.map_or_else(|| file_digest(&path), |v| Ok(v))?;
+                    ino_map.lock().unwrap().insert(inode, digest);
+                    digest
                 };
                 file_map
                     .lock()
@@ -69,7 +71,6 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
                     .entry(digest)
                     .or_insert_with(Vec::new)
                     .push(path.clone());
-                ino_map.lock().unwrap().insert(inode, digest);
             }
             Ok(())
         })
