@@ -49,15 +49,19 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
         .par_iter()
         .map(|path| -> io::Result<HashMap<_, _>> {
             let inode = inos(&path)?;
-            let digest = if let Some(digest) = cache.get(path) {
-                *digest
+            let ino_digest: Option<sha1::Digest> = ino_map
+                .lock()
+                .unwrap()
+                .get(&inode)
+                .map_or(None, |v| Some(*v));
+            let digest = if let Some(digest) = ino_digest {
+                digest
             } else {
-                let ino_digest = ino_map
-                    .lock()
-                    .unwrap()
-                    .get(&inode)
-                    .map_or(None, |v| Some(*v));
-                let digest = ino_digest.map_or_else(|| file_digest(&path), |v| Ok(v))?;
+                let digest = if let Some(digest) = cache.get(path) {
+                    *digest
+                } else {
+                    file_digest(&path)?
+                };
                 ino_map.lock().unwrap().insert(inode, digest);
                 digest
             };
