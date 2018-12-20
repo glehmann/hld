@@ -66,11 +66,8 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
         .reduce(
             || Ok(hashmap! {}),
             |a, b| {
-                let mut tmp = hashmap! {};
+                let mut tmp = b?;
                 a?.into_iter().for_each(|(digest, paths)| {
-                    tmp.entry(digest).or_insert_with(Vec::new).extend(paths)
-                });
-                b?.into_iter().for_each(|(digest, paths)| {
                     tmp.entry(digest).or_insert_with(Vec::new).extend(paths)
                 });
                 Ok(tmp)
