@@ -9,7 +9,7 @@ use std::io::Read;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use std::vec::Vec;
 
 /// buffer size for the digest computation
@@ -43,20 +43,17 @@ fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
 /// find the duplicates in the provided paths
 fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> {
     // compute a map of the digests to the path with that digest
-    let file_map = Arc::new(Mutex::new(HashMap::new()));
+    let file_map = Mutex::new(HashMap::new());
     let ino_map = Mutex::new(HashMap::new());
     let cache = update_cache(caches)?;
     paths
-        .iter()
-        .map(|path| (path, file_map.clone()))
-        .collect::<Vec<_>>()
         .par_iter()
-        .map(|(path, file_map)| -> io::Result<()> {
+        .map(|path| -> io::Result<()> {
             let path = path.clone();
             // don't hardlink empty files
-            if fs::metadata(path)?.len() > 0 {
-                let inode = inos(path)?;
-                let digest = if let Some(digest) = cache.get(path) {
+            if fs::metadata(&path)?.len() > 0 {
+                let inode = inos(&path)?;
+                let digest = if let Some(digest) = cache.get(&path) {
                     *digest
                 } else {
                     let ino_digest = ino_map
