@@ -109,11 +109,9 @@ fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>>
     let new_digests = paths
         .par_iter()
         .map(|path| {
-            let digest = if let Some(digest) = cache.get(path) {
-                *digest
-            } else {
-                file_digest(&path)?
-            };
+            let digest = cache
+                .get(path)
+                .map_or_else(|| file_digest(&path), |d| Ok(*d))?;
             Ok((path.clone(), digest))
         })
         .collect::<io::Result<HashMap<_, _>>>()?;
