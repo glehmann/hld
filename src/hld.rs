@@ -108,17 +108,24 @@ fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>>
     // compute the digest for the entries not already there
     let new_digests = paths
         .par_iter()
-        .filter(|path| !cache.contains_key(*path))
-        .map(|path| Ok((path.clone(), file_digest(&path)?)))
+        .map(|path| {
+            let digest = if let Some(digest) = cache.get(path) {
+                *digest
+            } else {
+                file_digest(&path)?
+            };
+            Ok((path.clone(), digest))
+        })
         .collect::<io::Result<HashMap<_, _>>>()?;
-    cache.extend(new_digests);
+
+    cache.extend(new_digests.clone());
 
     let output_file = File::create(CACHE_PATH)?;
     output_file.lock_exclusive()?;
     serde_json::to_writer_pretty(&output_file, &cache)?;
     output_file.unlock()?;
 
-    Ok(cache)
+    Ok(new_digests)
 }
 
 /// find the duplicated files and replace them with hardlinks
