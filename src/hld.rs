@@ -92,14 +92,11 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
 const CACHE_PATH: &str = "/tmp/hld.cache";
 
 fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>> {
-    let cache = if let Ok(cache_reader) = File::open(CACHE_PATH) {
-        let foo: HashMap<PathBuf, sha1::Digest> =
-            serde_json::from_reader(cache_reader).unwrap_or_default();
-        foo
-    } else {
-        let foo: HashMap<PathBuf, sha1::Digest> = HashMap::new();
-        foo
-    };
+    let cache: HashMap<PathBuf, sha1::Digest> = File::open(CACHE_PATH).ok().map_or_else(
+        || HashMap::new(),
+        |reader| serde_json::from_reader(reader).unwrap_or_default(),
+    );
+
     // remove dead entries
     let mut cache: HashMap<PathBuf, sha1::Digest> = cache
         .into_iter()
