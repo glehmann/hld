@@ -1,6 +1,5 @@
 use fs2::FileExt;
 use rayon::prelude::*;
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -17,6 +16,7 @@ const BUFFER_SIZE: usize = 1024 * 1024;
 
 /// compute the digest of a file
 fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
+    debug!("computing digest of {}", path.display());
     let mut f = File::open(path)?;
     let mut buffer = [0; BUFFER_SIZE];
     let mut m = sha1::Sha1::new();
