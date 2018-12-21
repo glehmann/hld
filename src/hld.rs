@@ -48,10 +48,11 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
     let res = paths
         .par_iter()
         .map(|path| -> io::Result<HashMap<_, _>> {
-            if fs::metadata(&path)?.len() == 0 {
+            let metadata = fs::metadata(&path)?;
+            if metadata.len() == 0 {
                 Ok(hashmap! {})
             } else {
-                let inode = inos(&path)?;
+                let inode = inos_m(&metadata);
                 let ino_digest: Option<sha1::Digest> = ino_map
                     .lock()
                     .unwrap()
@@ -159,6 +160,9 @@ pub fn glob_to_files(paths: &Vec<String>) -> Result<Vec<PathBuf>, glob::PatternE
 
 /// returns the inodes of the partition and of the file
 fn inos(path: &PathBuf) -> io::Result<(u64, u64)> {
-    let metadata = fs::metadata(path)?;
-    Ok((metadata.st_dev(), metadata.ino()))
+    Ok(inos_m(&fs::metadata(path)?))
+}
+
+fn inos_m(metadata: &fs::Metadata) -> (u64, u64) {
+    (metadata.st_dev(), metadata.ino())
 }
