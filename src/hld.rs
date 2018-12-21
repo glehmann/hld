@@ -98,22 +98,26 @@ fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>>
     );
 
     // remove dead entries
-    let mut cache: HashMap<PathBuf, sha1::Digest> = cache
+    let mut cache: HashMap<_, _> = cache
         .into_iter()
+        .collect::<Vec<(_, _)>>()
+        .par_iter()
+        .cloned()
         .filter(|(path, _)| path.exists())
         .collect();
-    // paths.iter().for_each(|path| cache.entry(path.clone()).or_insert_with(|| file_digest(&path)?));
-    for path in paths {
-        let entry = cache.entry(path.clone());
-        if let Entry::Vacant(entry) = entry {
-            let digest = file_digest(&path)?;
-            entry.insert(digest);
-        }
-    }
+    // compute the digest for the entries not already there
+    let new_digests = paths
+        .par_iter()
+        .filter(|path| !cache.contains_key(*path))
+        .map(|path| Ok((path.clone(), file_digest(&path)?)))
+        .collect::<io::Result<HashMap<_, _>>>()?;
+    cache.extend(new_digests);
+
     let output_file = File::create(CACHE_PATH)?;
     output_file.lock_exclusive()?;
     serde_json::to_writer_pretty(&output_file, &cache)?;
     output_file.unlock()?;
+
     Ok(cache)
 }
 
