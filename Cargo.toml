@@ -6,11 +6,12 @@ authors = ["Gaëtan Lehmann <gaetan.lehmann@gmail.com>"]
 [dependencies]
 sha1 = {version = "0.6.0", features = ["serde"]}
 structopt = "0.2"
-log = "0.4.6"
-loggerv = "0.7.1"
+log = { version = "0.4", features = ["std"] }
 glob = "0.2.11"
 serde_json = "1.0.33"
 fs2 = "0.4.3"
 rayon = "1.0.3"
 num_cpus = "1.9.0"
 maplit = "1.0.1"
+ansi_term = "0.11.0"
+atty = "0.2.11"

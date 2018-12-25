@@ -3,33 +3,28 @@ extern crate structopt;
 extern crate log;
 extern crate fs2;
 extern crate glob;
-extern crate loggerv;
 extern crate num_cpus;
 extern crate rayon;
 extern crate serde_json;
 extern crate sha1;
 #[macro_use]
 extern crate maplit;
+extern crate ansi_term;
+extern crate atty;
 
 mod cli;
+mod cli_logger;
 mod hld;
 
 use structopt::StructOpt;
 
 fn main() {
     let args = cli::Config::from_args();
-    loggerv::Logger::new()
-        .max_level(if args.verbose {
+    cli_logger::init(if args.verbose {
             log::Level::Info
         } else {
             log::Level::Warn
-        })
-        .module_path(false)
-        .level(true)
-        // .verbosity(args.occurrences_of("v"))
-        // .line_numbers(true)
-        .init()
-        .unwrap();
+        }).unwrap();
 
     if let Some(parallel) = args.parallel {
         rayon::ThreadPoolBuilder::new()
