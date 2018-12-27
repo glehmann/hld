@@ -29,11 +29,16 @@ custom_error! {pub Error
 /// Alias for a `Result` with the error type `hld::Error`.
 pub type Result<T> = result::Result<T, Error>;
 
-/// convert an IO error to an hld::Error::IO
-fn to_error_path_io(source: io::Error, path: &Path) -> Error {
-    Error::PathIo {
-        source: source,
-        path: path.to_path_buf(),
+trait ToPathIOErr<T> {
+    fn with_path(self: Self, path: &Path) -> Result<T>;
+}
+
+impl<T> ToPathIOErr<T> for io::Result<T> {
+    fn with_path(self: Self, path: &Path) -> Result<T> {
+        self.map_err(|e| Error::PathIo {
+            source: e,
+            path: path.to_path_buf(),
+        })
     }
 }
 
@@ -43,11 +48,11 @@ const BUFFER_SIZE: usize = 1024 * 1024;
 /// compute the digest of a file
 fn file_digest(path: &Path) -> Result<sha1::Digest> {
     debug!("computing digest of {}", path.display());
-    let mut f = File::open(path).map_err(|e| to_error_path_io(e, path))?;
+    let mut f = File::open(path).with_path(path)?;
     let mut buffer = [0; BUFFER_SIZE];
     let mut m = sha1::Sha1::new();
     loop {
-        let size = f.read(&mut buffer).map_err(|e| to_error_path_io(e, path))?;
+        let size = f.read(&mut buffer).with_path(path)?;
         if size == 0 {
             break;
         }
@@ -74,7 +79,7 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> Result<Vec<Vec
     let res = paths
         .par_iter()
         .map(|path| -> Result<HashMap<_, _>> {
-            let metadata = fs::metadata(&path).map_err(|e| to_error_path_io(e, path))?;
+            let metadata = fs::metadata(path).with_path(path)?;
             if metadata.len() == 0 {
                 Ok(hashmap! {})
             } else {
@@ -90,7 +95,7 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> Result<Vec<Vec
                     let digest = if let Some(digest) = cache.get(path) {
                         *digest
                     } else {
-                        file_digest(&path)?
+                        file_digest(path)?
                     };
                     ino_map.lock().unwrap().insert(inode, digest);
                     digest
@@ -117,7 +122,7 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> Result<Vec<Vec
 }
 
 fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, sha1::Digest>> {
-    let cache_path: PathBuf = PathBuf::from("/tmp/hld.cache");
+    let cache_path = PathBuf::from("/tmp/hld.cache");
     let cache: HashMap<PathBuf, sha1::Digest> = File::open(&cache_path).ok().map_or_else(
         || HashMap::new(),
         |reader| serde_json::from_reader(reader).unwrap_or_default(),
@@ -137,21 +142,17 @@ fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, sha1::Digest>> {
         .map(|path| {
             let digest = cache
                 .get(path)
-                .map_or_else(|| file_digest(&path), |d| Ok(*d))?;
+                .map_or_else(|| file_digest(path), |d| Ok(*d))?;
             Ok((path.clone(), digest))
         })
         .collect::<Result<HashMap<_, _>>>()?;
 
     cache.extend(new_digests.clone());
 
-    let output_file = File::create(&cache_path).map_err(|e| to_error_path_io(e, &cache_path))?;
-    output_file
-        .lock_exclusive()
-        .map_err(|e| to_error_path_io(e, &cache_path))?;
+    let output_file = File::create(&cache_path).with_path(&cache_path)?;
+    output_file.lock_exclusive().with_path(&cache_path)?;
     serde_json::to_writer_pretty(&output_file, &cache)?;
-    output_file
-        .unlock()
-        .map_err(|e| to_error_path_io(e, &cache_path))?;
+    output_file.unlock().with_path(&cache_path)?;
 
     Ok(new_digests)
 }
@@ -171,8 +172,8 @@ fn file_hardlinks(path: &Path, hardlinks: &[PathBuf]) -> Result<()> {
         let hinode = inos(hardlink)?;
         if hinode != inode && hinode.0 == inode.0 {
             info!("{} -> {}", hardlink.display(), path.display());
-            std::fs::remove_file(hardlink).map_err(|e| to_error_path_io(e, hardlink))?;
-            std::fs::hard_link(path, hardlink).map_err(|e| to_error_path_io(e, path))?;
+            std::fs::remove_file(hardlink).with_path(hardlink)?;
+            std::fs::hard_link(path, hardlink).with_path(path)?;
         }
     }
     Ok(())
@@ -189,9 +190,7 @@ pub fn glob_to_files(paths: &Vec<String>) -> Result<Vec<PathBuf>> {
 
 /// returns the inodes of the partition and of the file
 fn inos(path: &Path) -> Result<(u64, u64)> {
-    Ok(inos_m(
-        &fs::metadata(path).map_err(|e| to_error_path_io(e, path))?,
-    ))
+    Ok(inos_m(&fs::metadata(path).with_path(path)?))
 }
 
 fn inos_m(metadata: &fs::Metadata) -> (u64, u64) {
