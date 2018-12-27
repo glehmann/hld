@@ -177,17 +177,16 @@ pub fn init(level: log::Level) -> Result<(), SetLoggerError> {
 }
 
 /// Colorize a string with the color associated with the log level
-fn paint(level: &log::Level,  msg: &str) -> std::string::String {
+fn paint(level: &log::Level, msg: &str) -> std::string::String {
     if atty::is(atty::Stream::Stderr) {
-    match level {
-        log::Level::Error => Color::Red.paint(msg).to_string(),
-        log::Level::Warn => Color::Yellow.paint(msg).to_string(),
-        log::Level::Info => msg.to_string(),
-        log::Level::Debug => Color::Blue.paint(msg).to_string(),
-        log::Level::Trace => Color::Purple.paint(msg).to_string(),
-    }
-    }
-    else {
+        match level {
+            log::Level::Error => Color::Red.paint(msg).to_string(),
+            log::Level::Warn => Color::Yellow.paint(msg).to_string(),
+            log::Level::Info => msg.to_string(),
+            log::Level::Debug => Color::Blue.paint(msg).to_string(),
+            log::Level::Trace => Color::Purple.paint(msg).to_string(),
+        }
+    } else {
         msg.to_string()
     }
 }
