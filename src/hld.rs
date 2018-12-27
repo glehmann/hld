@@ -41,7 +41,7 @@ fn to_error_path_io(source: io::Error, path: &Path) -> Error {
 const BUFFER_SIZE: usize = 1024 * 1024;
 
 /// compute the digest of a file
-fn file_digest(path: &PathBuf) -> Result<sha1::Digest> {
+fn file_digest(path: &Path) -> Result<sha1::Digest> {
     debug!("computing digest of {}", path.display());
     let mut f = File::open(path).map_err(|e| to_error_path_io(e, path))?;
     let mut buffer = [0; BUFFER_SIZE];
@@ -165,7 +165,7 @@ pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf]) -> Result<()>
     Ok(())
 }
 
-fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> Result<()> {
+fn file_hardlinks(path: &Path, hardlinks: &[PathBuf]) -> Result<()> {
     let inode = inos(path)?;
     for hardlink in hardlinks {
         let hinode = inos(hardlink)?;
@@ -188,7 +188,7 @@ pub fn glob_to_files(paths: &Vec<String>) -> Result<Vec<PathBuf>> {
 }
 
 /// returns the inodes of the partition and of the file
-fn inos(path: &PathBuf) -> Result<(u64, u64)> {
+fn inos(path: &Path) -> Result<(u64, u64)> {
     Ok(inos_m(
         &fs::metadata(path).map_err(|e| to_error_path_io(e, path))?,
     ))
