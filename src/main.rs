@@ -11,6 +11,7 @@ extern crate sha1;
 extern crate maplit;
 extern crate ansi_term;
 extern crate atty;
+extern crate custom_error;
 
 mod cli;
 mod cli_logger;

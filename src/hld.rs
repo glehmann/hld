@@ -1,3 +1,4 @@
+use custom_error::custom_error;
 use fs2::FileExt;
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -7,21 +8,46 @@ use std::io;
 use std::io::Read;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
+use std::path::Path;
 use std::path::PathBuf;
+use std::result;
 use std::sync::Mutex;
 use std::vec::Vec;
+
+custom_error! {pub Error
+    PathIo {
+        source: io::Error,
+        path: PathBuf
+    } = @{format!("{}: {}", path.display(), source)},
+    // no need for this one for now, and not having it ensures we get a compilation error
+    // when an io::Error is not properly converted to Error::PathIo
+    // Io {source: io::Error} = "{source}",
+    Glob {source: glob::PatternError} = "{source}",
+    Json {source: serde_json::Error} = "{source}",
+}
+
+/// Alias for a `Result` with the error type `hld::Error`.
+pub type Result<T> = result::Result<T, Error>;
+
+/// convert an IO error to an hld::Error::IO
+fn to_error_path_io(source: io::Error, path: &Path) -> Error {
+    Error::PathIo {
+        source: source,
+        path: path.to_path_buf(),
+    }
+}
 
 /// buffer size for the digest computation
 const BUFFER_SIZE: usize = 1024 * 1024;
 
 /// compute the digest of a file
-fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
+fn file_digest(path: &PathBuf) -> Result<sha1::Digest> {
     debug!("computing digest of {}", path.display());
-    let mut f = File::open(path)?;
+    let mut f = File::open(path).map_err(|e| to_error_path_io(e, path))?;
     let mut buffer = [0; BUFFER_SIZE];
     let mut m = sha1::Sha1::new();
     loop {
-        let size = f.read(&mut buffer)?;
+        let size = f.read(&mut buffer).map_err(|e| to_error_path_io(e, path))?;
         if size == 0 {
             break;
         }
@@ -31,7 +57,7 @@ fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
 }
 
 // /// print the file digests
-// fn print_digests(paths: &[PathBuf]) -> io::Result<()> {
+// fn print_digests(paths: &[PathBuf]) -> Result<()> {
 //     for path in paths {
 //         let sha1 = file_digest(&path)?;
 //         println!("{}  {}", sha1, path.display());
@@ -41,14 +67,14 @@ fn file_digest(path: &PathBuf) -> io::Result<sha1::Digest> {
 // }
 
 /// find the duplicates in the provided paths
-fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec<Vec<PathBuf>>> {
+fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> Result<Vec<Vec<PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let ino_map = Mutex::new(HashMap::new());
     let cache = update_cache(caches)?;
     let res = paths
         .par_iter()
-        .map(|path| -> io::Result<HashMap<_, _>> {
-            let metadata = fs::metadata(&path)?;
+        .map(|path| -> Result<HashMap<_, _>> {
+            let metadata = fs::metadata(&path).map_err(|e| to_error_path_io(e, path))?;
             if metadata.len() == 0 {
                 Ok(hashmap! {})
             } else {
@@ -90,10 +116,9 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<Vec
         .collect())
 }
 
-const CACHE_PATH: &str = "/tmp/hld.cache";
-
-fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>> {
-    let cache: HashMap<PathBuf, sha1::Digest> = File::open(CACHE_PATH).ok().map_or_else(
+fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, sha1::Digest>> {
+    let cache_path: PathBuf = PathBuf::from("/tmp/hld.cache");
+    let cache: HashMap<PathBuf, sha1::Digest> = File::open(&cache_path).ok().map_or_else(
         || HashMap::new(),
         |reader| serde_json::from_reader(reader).unwrap_or_default(),
     );
@@ -115,20 +140,24 @@ fn update_cache(paths: &[PathBuf]) -> io::Result<HashMap<PathBuf, sha1::Digest>>
                 .map_or_else(|| file_digest(&path), |d| Ok(*d))?;
             Ok((path.clone(), digest))
         })
-        .collect::<io::Result<HashMap<_, _>>>()?;
+        .collect::<Result<HashMap<_, _>>>()?;
 
     cache.extend(new_digests.clone());
 
-    let output_file = File::create(CACHE_PATH)?;
-    output_file.lock_exclusive()?;
+    let output_file = File::create(&cache_path).map_err(|e| to_error_path_io(e, &cache_path))?;
+    output_file
+        .lock_exclusive()
+        .map_err(|e| to_error_path_io(e, &cache_path))?;
     serde_json::to_writer_pretty(&output_file, &cache)?;
-    output_file.unlock()?;
+    output_file
+        .unlock()
+        .map_err(|e| to_error_path_io(e, &cache_path))?;
 
     Ok(new_digests)
 }
 
 /// find the duplicated files and replace them with hardlinks
-pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result<()> {
+pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf]) -> Result<()> {
     let dups = find_file_duplicates(paths, caches)?;
     for dup in dups {
         file_hardlinks(&dup[0], &dup[1..])?;
@@ -136,20 +165,20 @@ pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf]) -> io::Result
     Ok(())
 }
 
-fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> io::Result<()> {
+fn file_hardlinks(path: &PathBuf, hardlinks: &[PathBuf]) -> Result<()> {
     let inode = inos(path)?;
     for hardlink in hardlinks {
         let hinode = inos(hardlink)?;
         if hinode != inode && hinode.0 == inode.0 {
             info!("{} -> {}", hardlink.display(), path.display());
-            std::fs::remove_file(hardlink)?;
-            std::fs::hard_link(path, hardlink)?;
+            std::fs::remove_file(hardlink).map_err(|e| to_error_path_io(e, hardlink))?;
+            std::fs::hard_link(path, hardlink).map_err(|e| to_error_path_io(e, path))?;
         }
     }
     Ok(())
 }
 
-pub fn glob_to_files(paths: &Vec<String>) -> Result<Vec<PathBuf>, glob::PatternError> {
+pub fn glob_to_files(paths: &Vec<String>) -> Result<Vec<PathBuf>> {
     Ok(paths
         .into_iter()
         .flat_map(|g| glob::glob(g).unwrap().into_iter().filter_map(|f| f.ok()))
@@ -159,8 +188,10 @@ pub fn glob_to_files(paths: &Vec<String>) -> Result<Vec<PathBuf>, glob::PatternE
 }
 
 /// returns the inodes of the partition and of the file
-fn inos(path: &PathBuf) -> io::Result<(u64, u64)> {
-    Ok(inos_m(&fs::metadata(path)?))
+fn inos(path: &PathBuf) -> Result<(u64, u64)> {
+    Ok(inos_m(
+        &fs::metadata(path).map_err(|e| to_error_path_io(e, path))?,
+    ))
 }
 
 fn inos_m(metadata: &fs::Metadata) -> (u64, u64) {
