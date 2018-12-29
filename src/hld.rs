@@ -128,32 +128,39 @@ fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, sha1::Digest>> {
         || HashMap::new(),
         |reader| bincode::deserialize_from(reader).unwrap_or_default(),
     );
+    let original_cache_size = cache.len();
 
     // remove dead entries
-    let mut cache: HashMap<_, _> = cache
+    let mut live_cache: HashMap<_, _> = cache
         .into_iter()
         .collect::<Vec<(_, _)>>()
         .par_iter()
         .cloned()
         .filter(|(path, _)| path.exists())
         .collect();
+    let live_cache_size = live_cache.len();
+    let updated = original_cache_size != live_cache_size;
     // compute the digest for the entries not already there
     let new_digests = paths
         .par_iter()
         .map(|path| {
-            let digest = cache
+            let digest = live_cache
                 .get(path)
                 .map_or_else(|| file_digest(path), |d| Ok(*d))?;
             Ok((path.clone(), digest))
         })
         .collect::<Result<HashMap<_, _>>>()?;
 
-    cache.extend(new_digests.clone());
+    live_cache.extend(new_digests.clone());
+    let updated = updated || live_cache_size != live_cache.len();
 
-    let output_file = File::create(&cache_path).with_path(&cache_path)?;
-    output_file.lock_exclusive().with_path(&cache_path)?;
-    bincode::serialize_into(&output_file, &cache)?;
-    output_file.unlock().with_path(&cache_path)?;
+    if updated {
+        debug!("saving updated cache");
+        let output_file = File::create(&cache_path).with_path(&cache_path)?;
+        output_file.lock_exclusive().with_path(&cache_path)?;
+        bincode::serialize_into(&output_file, &live_cache)?;
+        output_file.unlock().with_path(&cache_path)?;
+    }
 
     Ok(new_digests)
 }
