@@ -22,7 +22,7 @@ custom_error! {pub Error
     } = @{format!("{}: {}", path.display(), source)},
     // no need for this one for now, and not having it ensures we get a compilation error
     // when an io::Error is not properly converted to Error::PathIo
-    Io {source: io::Error} = "{source}",
+    // Io {source: io::Error} = "{source}",
     Glob {source: glob::PatternError} = "{source}",
     Cache {source: bincode::Error} = "{source}",
 }
@@ -48,9 +48,9 @@ type Digest = [u8; 32];
 /// compute the digest of a file
 fn file_digest(path: &Path) -> Result<Digest> {
     debug!("computing digest of {}", path.display());
-    let mut file = fs::File::open(&path)?;
+    let mut file = fs::File::open(&path).with_path(&path)?;
     let mut hasher = Blake2b::new(32);
-    io::copy(&mut file, &mut hasher)?;
+    io::copy(&mut file, &mut hasher).with_path(&path)?;
     let mut hash: Digest = Default::default();
     hash.copy_from_slice(hasher.finalize().as_bytes());
     Ok(hash)
