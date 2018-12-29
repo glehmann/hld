@@ -67,28 +67,28 @@ fn file_digest(path: &Path) -> Result<Digest> {
 // }
 
 /// find the duplicates in the provided paths
-fn find_file_duplicates(
-    paths: &[PathBuf],
+fn find_file_duplicates<'a>(
+    paths: &'a [PathBuf],
     caches: &[PathBuf],
     dry_run: bool,
-) -> Result<Vec<Vec<PathBuf>>> {
+) -> Result<Vec<Vec<&'a PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let ino_map = Mutex::new(HashMap::new());
     let cache = update_cache(caches, dry_run)?;
 
     // get some metadata and filter out the empty files
-    let mut path_inos: Vec<(PathBuf, (u64, u64))> = Vec::new();
+    let mut path_inos: Vec<(&'a PathBuf, (u64, u64))> = Vec::new();
     for path in paths {
         let metadata = fs::metadata(path).with_path(path)?;
         if metadata.len() > 0 {
-            path_inos.push((path.clone(), inos_m(&metadata)));
+            path_inos.push((path, inos_m(&metadata)));
         }
     }
 
     // compute the digests
     let digests = path_inos
         .par_iter()
-        .map(|(path, inode)| {
+        .map(|(path, inode)| -> Result<(&'a PathBuf, Digest)> {
             let ino_digest: Option<Digest> = ino_map
                 .lock()
                 .unwrap()
@@ -97,7 +97,7 @@ fn find_file_duplicates(
             let digest = if let Some(digest) = ino_digest {
                 digest
             } else {
-                let digest = if let Some(digest) = cache.get(path) {
+                let digest = if let Some(digest) = cache.get(*path) {
                     *digest
                 } else {
                     file_digest(path)?
@@ -105,16 +105,14 @@ fn find_file_duplicates(
                 ino_map.lock().unwrap().insert(*inode, digest);
                 digest
             };
-            Ok((digest, path.clone()))
+            Ok((path, digest))
         })
-        .collect::<Result<Vec<(Digest, PathBuf)>>>()?;
+        .collect::<Result<Vec<(&'a PathBuf, Digest)>>>()?;
 
     // merge the digests in a hashmap
     let mut res = hashmap! {};
-    for (digest, path) in digests {
-        res.entry(digest)
-            .or_insert_with(Vec::new)
-            .push(path.clone());
+    for (path, digest) in digests {
+        res.entry(digest).or_insert_with(Vec::new).push(path);
     }
 
     // then just keep the paths with duplicates
@@ -177,7 +175,7 @@ pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf], dry_run: bool
     Ok(())
 }
 
-fn file_hardlinks(path: &Path, hardlinks: &[PathBuf], dry_run: bool) -> Result<()> {
+fn file_hardlinks(path: &Path, hardlinks: &[&PathBuf], dry_run: bool) -> Result<()> {
     let inode = inos(path)?;
     for hardlink in hardlinks {
         let hinode = inos(hardlink)?;
