@@ -2,6 +2,7 @@ use bincode;
 use custom_error::custom_error;
 use fs2::FileExt;
 use rayon::prelude::*;
+use sha1::Digest;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
@@ -47,7 +48,7 @@ impl<T> ToPathIOErr<T> for io::Result<T> {
 const BUFFER_SIZE: usize = 1024 * 1024;
 
 /// compute the digest of a file
-fn file_digest(path: &Path) -> Result<sha1::Digest> {
+fn file_digest(path: &Path) -> Result<Digest> {
     debug!("computing digest of {}", path.display());
     let mut f = File::open(path).with_path(path)?;
     let mut buffer = [0; BUFFER_SIZE];
@@ -85,7 +86,7 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> Result<Vec<Vec
                 Ok(hashmap! {})
             } else {
                 let inode = inos_m(&metadata);
-                let ino_digest: Option<sha1::Digest> = ino_map
+                let ino_digest: Option<Digest> = ino_map
                     .lock()
                     .unwrap()
                     .get(&inode)
@@ -122,9 +123,9 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> Result<Vec<Vec
         .collect())
 }
 
-fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, sha1::Digest>> {
+fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, Digest>> {
     let cache_path = PathBuf::from("/tmp/hld.cache");
-    let cache: HashMap<PathBuf, sha1::Digest> = File::open(&cache_path).ok().map_or_else(
+    let cache: HashMap<PathBuf, Digest> = File::open(&cache_path).ok().map_or_else(
         || HashMap::new(),
         |reader| bincode::deserialize_from(reader).unwrap_or_default(),
     );
