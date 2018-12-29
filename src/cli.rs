@@ -1,4 +1,5 @@
 use structopt::StructOpt;
+use log;
 
 /// Hard Link Deduplicator
 #[derive(StructOpt, Debug)]
@@ -11,10 +12,6 @@ pub struct Config {
     #[structopt(short = "-c", long = "cache")]
     pub caches: Vec<String>,
 
-    /// Activate verbose mode
-    #[structopt(short = "v", long = "verbose")]
-    pub verbose: bool,
-
     /// Recursively find the files in the provided paths
     #[structopt(short = "r", long = "recursive")]
     pub recursive: bool,
@@ -22,4 +19,8 @@ pub struct Config {
     /// Parallelism level
     #[structopt(short = "j", long = "parallel")]
     pub parallel: Option<usize>,
+
+    /// Log level
+    #[structopt(short = "l", long = "log-level", default_value="INFO")]
+    pub log_level: log::Level,
 }

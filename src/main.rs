@@ -21,12 +21,7 @@ use structopt::StructOpt;
 
 fn main() {
     let args = cli::Config::from_args();
-    cli_logger::init(if args.verbose {
-        log::Level::Info
-    } else {
-        log::Level::Warn
-    })
-    .unwrap();
+    cli_logger::init(args.log_level).unwrap();
 
     if let Some(parallel) = args.parallel {
         rayon::ThreadPoolBuilder::new()
