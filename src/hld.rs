@@ -1,13 +1,12 @@
 use bincode;
+use blake2_rfc::blake2b::Blake2b;
 use custom_error::custom_error;
 use fs2::FileExt;
 use rayon::prelude::*;
-use sha1::Digest;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io;
-use std::io::Read;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
@@ -23,7 +22,7 @@ custom_error! {pub Error
     } = @{format!("{}: {}", path.display(), source)},
     // no need for this one for now, and not having it ensures we get a compilation error
     // when an io::Error is not properly converted to Error::PathIo
-    // Io {source: io::Error} = "{source}",
+    Io {source: io::Error} = "{source}",
     Glob {source: glob::PatternError} = "{source}",
     Cache {source: bincode::Error} = "{source}",
 }
@@ -44,23 +43,17 @@ impl<T> ToPathIOErr<T> for io::Result<T> {
     }
 }
 
-/// buffer size for the digest computation
-const BUFFER_SIZE: usize = 1024 * 1024;
+type Digest = [u8; 32];
 
 /// compute the digest of a file
 fn file_digest(path: &Path) -> Result<Digest> {
     debug!("computing digest of {}", path.display());
-    let mut f = File::open(path).with_path(path)?;
-    let mut buffer = [0; BUFFER_SIZE];
-    let mut m = sha1::Sha1::new();
-    loop {
-        let size = f.read(&mut buffer).with_path(path)?;
-        if size == 0 {
-            break;
-        }
-        m.update(&buffer[0..size]);
-    }
-    Ok(m.digest())
+    let mut file = fs::File::open(&path)?;
+    let mut hasher = Blake2b::new(32);
+    io::copy(&mut file, &mut hasher)?;
+    let mut hash: Digest = Default::default();
+    hash.copy_from_slice(hasher.finalize().as_bytes());
+    Ok(hash)
 }
 
 // /// print the file digests

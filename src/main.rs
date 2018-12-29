@@ -5,12 +5,12 @@ extern crate fs2;
 extern crate glob;
 extern crate num_cpus;
 extern crate rayon;
-extern crate sha1;
 #[macro_use]
 extern crate maplit;
 extern crate ansi_term;
 extern crate atty;
 extern crate bincode;
+extern crate blake2_rfc;
 extern crate custom_error;
 
 mod cli;
