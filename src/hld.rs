@@ -67,10 +67,10 @@ fn file_digest(path: &Path) -> Result<Digest> {
 // }
 
 /// find the duplicates in the provided paths
-fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> Result<Vec<Vec<PathBuf>>> {
+fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf], dry_run: bool) -> Result<Vec<Vec<PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let ino_map = Mutex::new(HashMap::new());
-    let cache = update_cache(caches)?;
+    let cache = update_cache(caches, dry_run)?;
     let res = paths
         .par_iter()
         .map(|path| -> Result<HashMap<_, _>> {
@@ -116,7 +116,7 @@ fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf]) -> Result<Vec<Vec
         .collect())
 }
 
-fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, Digest>> {
+fn update_cache(paths: &[PathBuf], dry_run: bool) -> Result<HashMap<PathBuf, Digest>> {
     let cache_path = PathBuf::from("/tmp/hld.cache");
     let cache: HashMap<PathBuf, Digest> = File::open(&cache_path).ok().map_or_else(
         || HashMap::new(),
@@ -148,7 +148,7 @@ fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, Digest>> {
     live_cache.extend(new_digests.clone());
     let updated = updated || live_cache_size != live_cache.len();
 
-    if updated {
+    if updated && !dry_run  {
         debug!("saving updated cache");
         let output_file = File::create(&cache_path).with_path(&cache_path)?;
         output_file.lock_exclusive().with_path(&cache_path)?;
@@ -160,22 +160,24 @@ fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, Digest>> {
 }
 
 /// find the duplicated files and replace them with hardlinks
-pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf]) -> Result<()> {
-    let dups = find_file_duplicates(paths, caches)?;
+pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf], dry_run: bool) -> Result<()> {
+    let dups = find_file_duplicates(paths, caches, dry_run)?;
     for dup in dups {
-        file_hardlinks(&dup[0], &dup[1..])?;
+        file_hardlinks(&dup[0], &dup[1..], dry_run)?;
     }
     Ok(())
 }
 
-fn file_hardlinks(path: &Path, hardlinks: &[PathBuf]) -> Result<()> {
+fn file_hardlinks(path: &Path, hardlinks: &[PathBuf], dry_run: bool) -> Result<()> {
     let inode = inos(path)?;
     for hardlink in hardlinks {
         let hinode = inos(hardlink)?;
         if hinode != inode && hinode.0 == inode.0 {
             info!("{} -> {}", hardlink.display(), path.display());
-            std::fs::remove_file(hardlink).with_path(hardlink)?;
-            std::fs::hard_link(path, hardlink).with_path(path)?;
+            if !dry_run {
+                std::fs::remove_file(hardlink).with_path(hardlink)?;
+                std::fs::hard_link(path, hardlink).with_path(path)?;
+            }
         }
     }
     Ok(())

@@ -16,6 +16,10 @@ pub struct Config {
     #[structopt(short = "r", long = "recursive")]
     pub recursive: bool,
 
+    /// Don't modify anything on the disk
+    #[structopt(short = "n", long = "dry-run")]
+    pub dry_run: bool,
+
     /// Parallelism level
     #[structopt(short = "j", long = "parallel")]
     pub parallel: Option<usize>,

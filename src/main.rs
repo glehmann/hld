@@ -41,7 +41,7 @@ fn main() {
     };
     let files = hld::glob_to_files(&file_globs).unwrap();
     let caches = hld::glob_to_files(&cache_globs).unwrap();
-    if let Err(err) = hld::hardlink_deduplicate(&files, &caches) {
+    if let Err(err) = hld::hardlink_deduplicate(&files, &caches, args.dry_run) {
         error!("{}", err);
         std::process::exit(1);
     }
