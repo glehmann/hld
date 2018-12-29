@@ -1,5 +1,5 @@
-use structopt::StructOpt;
 use log;
+use structopt::StructOpt;
 
 /// Hard Link Deduplicator
 #[derive(StructOpt, Debug)]
@@ -25,6 +25,6 @@ pub struct Config {
     pub parallel: Option<usize>,
 
     /// Log level
-    #[structopt(short = "l", long = "log-level", default_value="INFO")]
+    #[structopt(short = "l", long = "log-level", default_value = "INFO")]
     pub log_level: log::Level,
 }

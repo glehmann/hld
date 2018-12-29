@@ -67,47 +67,56 @@ fn file_digest(path: &Path) -> Result<Digest> {
 // }
 
 /// find the duplicates in the provided paths
-fn find_file_duplicates(paths: &[PathBuf], caches: &[PathBuf], dry_run: bool) -> Result<Vec<Vec<PathBuf>>> {
+fn find_file_duplicates(
+    paths: &[PathBuf],
+    caches: &[PathBuf],
+    dry_run: bool,
+) -> Result<Vec<Vec<PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let ino_map = Mutex::new(HashMap::new());
     let cache = update_cache(caches, dry_run)?;
-    let res = paths
+
+    // get some metadata and filter out the empty files
+    let mut path_inos: Vec<(PathBuf, (u64, u64))> = Vec::new();
+    for path in paths {
+        let metadata = fs::metadata(path).with_path(path)?;
+        if metadata.len() > 0 {
+            path_inos.push((path.clone(), inos_m(&metadata)));
+        }
+    }
+
+    // compute the digests
+    let digests = path_inos
         .par_iter()
-        .map(|path| -> Result<HashMap<_, _>> {
-            let metadata = fs::metadata(path).with_path(path)?;
-            if metadata.len() == 0 {
-                Ok(hashmap! {})
+        .map(|(path, inode)| {
+            let ino_digest: Option<Digest> = ino_map
+                .lock()
+                .unwrap()
+                .get(inode)
+                .map_or(None, |v| Some(*v));
+            let digest = if let Some(digest) = ino_digest {
+                digest
             } else {
-                let inode = inos_m(&metadata);
-                let ino_digest: Option<Digest> = ino_map
-                    .lock()
-                    .unwrap()
-                    .get(&inode)
-                    .map_or(None, |v| Some(*v));
-                let digest = if let Some(digest) = ino_digest {
-                    digest
+                let digest = if let Some(digest) = cache.get(path) {
+                    *digest
                 } else {
-                    let digest = if let Some(digest) = cache.get(path) {
-                        *digest
-                    } else {
-                        file_digest(path)?
-                    };
-                    ino_map.lock().unwrap().insert(inode, digest);
-                    digest
+                    file_digest(path)?
                 };
-                Ok(hashmap! {digest => vec![path.clone()]})
-            }
+                ino_map.lock().unwrap().insert(*inode, digest);
+                digest
+            };
+            Ok((digest, path.clone()))
         })
-        .reduce(
-            || Ok(hashmap! {}),
-            |a, b| {
-                let mut tmp = b?;
-                a?.into_iter().for_each(|(digest, paths)| {
-                    tmp.entry(digest).or_insert_with(Vec::new).extend(paths)
-                });
-                Ok(tmp)
-            },
-        )?;
+        .collect::<Result<Vec<(Digest, PathBuf)>>>()?;
+
+    // merge the digests in a hashmap
+    let mut res = hashmap! {};
+    for (digest, path) in digests {
+        res.entry(digest)
+            .or_insert_with(Vec::new)
+            .push(path.clone());
+    }
+
     // then just keep the paths with duplicates
     Ok(res
         .into_iter()
@@ -148,7 +157,7 @@ fn update_cache(paths: &[PathBuf], dry_run: bool) -> Result<HashMap<PathBuf, Dig
     live_cache.extend(new_digests.clone());
     let updated = updated || live_cache_size != live_cache.len();
 
-    if updated && !dry_run  {
+    if updated && !dry_run {
         debug!("saving updated cache");
         let output_file = File::create(&cache_path).with_path(&cache_path)?;
         output_file.lock_exclusive().with_path(&cache_path)?;
