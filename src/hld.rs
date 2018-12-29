@@ -1,3 +1,4 @@
+use bincode;
 use custom_error::custom_error;
 use fs2::FileExt;
 use rayon::prelude::*;
@@ -23,7 +24,7 @@ custom_error! {pub Error
     // when an io::Error is not properly converted to Error::PathIo
     // Io {source: io::Error} = "{source}",
     Glob {source: glob::PatternError} = "{source}",
-    Json {source: serde_json::Error} = "{source}",
+    Cache {source: bincode::Error} = "{source}",
 }
 
 /// Alias for a `Result` with the error type `hld::Error`.
@@ -125,7 +126,7 @@ fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, sha1::Digest>> {
     let cache_path = PathBuf::from("/tmp/hld.cache");
     let cache: HashMap<PathBuf, sha1::Digest> = File::open(&cache_path).ok().map_or_else(
         || HashMap::new(),
-        |reader| serde_json::from_reader(reader).unwrap_or_default(),
+        |reader| bincode::deserialize_from(reader).unwrap_or_default(),
     );
 
     // remove dead entries
@@ -151,7 +152,7 @@ fn update_cache(paths: &[PathBuf]) -> Result<HashMap<PathBuf, sha1::Digest>> {
 
     let output_file = File::create(&cache_path).with_path(&cache_path)?;
     output_file.lock_exclusive().with_path(&cache_path)?;
-    serde_json::to_writer_pretty(&output_file, &cache)?;
+    bincode::serialize_into(&output_file, &cache)?;
     output_file.unlock().with_path(&cache_path)?;
 
     Ok(new_digests)
