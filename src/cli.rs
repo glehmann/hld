@@ -9,7 +9,7 @@ pub struct Config {
     pub files: Vec<String>,
 
     /// Files to cache
-    #[structopt(short = "-c", long = "cache")]
+    #[structopt(short = "-c", long = "cache", raw(number_of_values="1"))]
     pub caches: Vec<String>,
 
     /// Recursively find the files in the provided paths
