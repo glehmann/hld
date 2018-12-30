@@ -8,12 +8,11 @@ extern crate rayon;
 #[macro_use]
 extern crate maplit;
 extern crate ansi_term;
+extern crate app_dirs;
 extern crate atty;
 extern crate bincode;
 extern crate blake2_rfc;
 extern crate custom_error;
-extern crate app_dirs;
-
 
 mod cli;
 mod cli_logger;
@@ -31,6 +30,8 @@ fn main() {
             .build_global()
             .unwrap();
     }
+
+    let cache_path = args.cache_path();
     let file_globs = if args.recursive {
         args.files.iter().map(|d| format!("{}/**/*", d)).collect()
     } else {
@@ -43,7 +44,6 @@ fn main() {
     };
     let files = hld::glob_to_files(&file_globs).unwrap();
     let caches = hld::glob_to_files(&cache_globs).unwrap();
-    let cache_path = hld::cache_path(args.cache_path);
     if let Err(err) = hld::hardlink_deduplicate(&files, &caches, args.dry_run, &cache_path) {
         error!("{}", err);
         std::process::exit(1);

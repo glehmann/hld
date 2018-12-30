@@ -124,7 +124,11 @@ fn find_file_duplicates<'a>(
         .collect())
 }
 
-fn update_cache(paths: &[PathBuf], dry_run: bool, cache_path: &Path) -> Result<HashMap<PathBuf, Digest>> {
+fn update_cache(
+    paths: &[PathBuf],
+    dry_run: bool,
+    cache_path: &Path,
+) -> Result<HashMap<PathBuf, Digest>> {
     let cache: HashMap<PathBuf, Digest> = File::open(&cache_path).ok().map_or_else(
         || HashMap::new(),
         |reader| bincode::deserialize_from(reader).unwrap_or_default(),
@@ -167,7 +171,12 @@ fn update_cache(paths: &[PathBuf], dry_run: bool, cache_path: &Path) -> Result<H
 }
 
 /// find the duplicated files and replace them with hardlinks
-pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf], dry_run: bool, cache_path: &Path) -> Result<()> {
+pub fn hardlink_deduplicate(
+    paths: &[PathBuf],
+    caches: &[PathBuf],
+    dry_run: bool,
+    cache_path: &Path,
+) -> Result<()> {
     let dups = find_file_duplicates(paths, caches, dry_run, cache_path)?;
     for dup in dups {
         file_hardlinks(&dup[0], &dup[1..], dry_run)?;
@@ -206,14 +215,4 @@ fn inos(path: &Path) -> Result<(u64, u64)> {
 
 fn inos_m(metadata: &fs::Metadata) -> (u64, u64) {
     (metadata.st_dev(), metadata.ino())
-}
-
-/// Compute the cache path
-pub fn cache_path(path: Option<PathBuf>) -> PathBuf {
-    let path = path.or_else(|| app_dirs::app_dir(
-        app_dirs::AppDataType::UserCache,
-        &app_dirs::AppInfo {name: "hld", author: "glehmann"},
-        "digests").ok()).unwrap();
-    debug!("cache path: {}", path.display());
-    path
 }
