@@ -207,3 +207,13 @@ fn inos(path: &Path) -> Result<(u64, u64)> {
 fn inos_m(metadata: &fs::Metadata) -> (u64, u64) {
     (metadata.st_dev(), metadata.ino())
 }
+
+/// Compute the cache path
+pub fn cache_path(path: Option<PathBuf>) -> PathBuf {
+    let path = path.or_else(|| app_dirs::app_dir(
+        app_dirs::AppDataType::UserCache,
+        &app_dirs::AppInfo {name: "hld", author: "glehmann"},
+        "digests").ok()).unwrap();
+    debug!("cache path: {}", path.display());
+    path
+}
