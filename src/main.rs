@@ -12,6 +12,8 @@ extern crate atty;
 extern crate bincode;
 extern crate blake2_rfc;
 extern crate custom_error;
+extern crate app_dirs;
+
 
 mod cli;
 mod cli_logger;
@@ -41,7 +43,13 @@ fn main() {
     };
     let files = hld::glob_to_files(&file_globs).unwrap();
     let caches = hld::glob_to_files(&cache_globs).unwrap();
-    if let Err(err) = hld::hardlink_deduplicate(&files, &caches, args.dry_run) {
+    let mut cache_path = args.cache_path.or_else(|| app_dirs::app_dir(
+        app_dirs::AppDataType::UserCache,
+        &app_dirs::AppInfo {name: "hld", author: "glehmann"},
+        "").ok()).unwrap();
+    cache_path.push("digests");
+    debug!("cache file: {}", cache_path.display());
+    if let Err(err) = hld::hardlink_deduplicate(&files, &caches, args.dry_run, &cache_path) {
         error!("{}", err);
         std::process::exit(1);
     }

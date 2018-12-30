@@ -1,5 +1,6 @@
 use log;
 use structopt::StructOpt;
+use std::path::PathBuf;
 
 /// Hard Link Deduplicator
 #[derive(StructOpt, Debug)]
@@ -11,6 +12,10 @@ pub struct Config {
     /// Files to cache
     #[structopt(short = "-c", long = "cache", raw(number_of_values="1"))]
     pub caches: Vec<String>,
+
+    /// Cache file
+    #[structopt(short = "-C", long = "cache-path", parse(from_os_str))]
+    pub cache_path: Option<PathBuf>,
 
     /// Recursively find the files in the provided paths
     #[structopt(short = "r", long = "recursive")]

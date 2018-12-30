@@ -71,10 +71,11 @@ fn find_file_duplicates<'a>(
     paths: &'a [PathBuf],
     caches: &[PathBuf],
     dry_run: bool,
+    cache_path: &Path,
 ) -> Result<Vec<Vec<&'a PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let ino_map = Mutex::new(HashMap::new());
-    let cache = update_cache(caches, dry_run)?;
+    let cache = update_cache(caches, dry_run, cache_path)?;
 
     // get some metadata and filter out the empty files
     let mut path_inos: Vec<(&'a PathBuf, (u64, u64))> = Vec::new();
@@ -123,8 +124,7 @@ fn find_file_duplicates<'a>(
         .collect())
 }
 
-fn update_cache(paths: &[PathBuf], dry_run: bool) -> Result<HashMap<PathBuf, Digest>> {
-    let cache_path = PathBuf::from("/tmp/hld.cache");
+fn update_cache(paths: &[PathBuf], dry_run: bool, cache_path: &Path) -> Result<HashMap<PathBuf, Digest>> {
     let cache: HashMap<PathBuf, Digest> = File::open(&cache_path).ok().map_or_else(
         || HashMap::new(),
         |reader| bincode::deserialize_from(reader).unwrap_or_default(),
@@ -167,8 +167,8 @@ fn update_cache(paths: &[PathBuf], dry_run: bool) -> Result<HashMap<PathBuf, Dig
 }
 
 /// find the duplicated files and replace them with hardlinks
-pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf], dry_run: bool) -> Result<()> {
-    let dups = find_file_duplicates(paths, caches, dry_run)?;
+pub fn hardlink_deduplicate(paths: &[PathBuf], caches: &[PathBuf], dry_run: bool, cache_path: &Path) -> Result<()> {
+    let dups = find_file_duplicates(paths, caches, dry_run, cache_path)?;
     for dup in dups {
         file_hardlinks(&dup[0], &dup[1..], dry_run)?;
     }
