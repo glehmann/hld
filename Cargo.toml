@@ -21,3 +21,5 @@ app_dirs = "1.2.1"
 [dev-dependencies]
 assert_cmd = "0.10.2"
 predicates = "1.0.0"
+assert_fs = "0.10.0"
+lipsum = "0.6.0"
