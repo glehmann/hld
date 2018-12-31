@@ -90,11 +90,8 @@ fn find_file_duplicates<'a>(
     let digests = path_inos
         .par_iter()
         .map(|(path, inode)| -> Result<(&'a PathBuf, Digest)> {
-            let ino_digest: Option<Digest> = ino_map
-                .lock()
-                .unwrap()
-                .get(inode)
-                .map_or(None, |v| Some(*v));
+            let ino_digest: Option<Digest> =
+                ino_map.lock().unwrap().get(inode).and_then(|v| Some(*v));
             let digest = if let Some(digest) = ino_digest {
                 digest
             } else {
@@ -129,10 +126,11 @@ fn update_cache(
     dry_run: bool,
     cache_path: &Path,
 ) -> Result<HashMap<PathBuf, Digest>> {
-    let cache: HashMap<PathBuf, Digest> = File::open(&cache_path).ok().map_or_else(
-        || HashMap::new(),
-        |reader| bincode::deserialize_from(reader).unwrap_or_default(),
-    );
+    let cache: HashMap<PathBuf, Digest> = File::open(&cache_path)
+        .ok()
+        .map_or_else(HashMap::new, |reader| {
+            bincode::deserialize_from(reader).unwrap_or_default()
+        });
     let original_cache_size = cache.len();
 
     // remove dead entries
@@ -199,10 +197,10 @@ fn file_hardlinks(path: &Path, hardlinks: &[&PathBuf], dry_run: bool) -> Result<
     Ok(())
 }
 
-pub fn glob_to_files(paths: &Vec<String>) -> Result<Vec<PathBuf>> {
+pub fn glob_to_files(paths: &[String]) -> Result<Vec<PathBuf>> {
     Ok(paths
         .into_iter()
-        .flat_map(|g| glob::glob(g).unwrap().into_iter().filter_map(|f| f.ok()))
+        .flat_map(|g| glob::glob(g).unwrap().filter_map(|f| f.ok()))
         .map(|f| f.to_path_buf())
         .filter(|f| f.metadata().unwrap().file_type().is_file())
         .collect())

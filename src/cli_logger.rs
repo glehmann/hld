@@ -110,7 +110,7 @@ impl Logger {
             log::Level::Info => "".to_string(),
             _ => format!("{}: ", level),
         };
-        let header = paint(&record.level(), &header);
+        let header = paint(record.level(), &header);
         eprintln!("{}{}", header, record.args());
     }
 
@@ -123,7 +123,7 @@ impl Logger {
         };
         let level = record.level().to_string().to_lowercase();
         let header = format!("{}({}): {}: ", path, line, level);
-        let header = paint(&record.level(), &header);
+        let header = paint(record.level(), &header);
         eprintln!("{}{}", header, record.args());
     }
 }
@@ -177,7 +177,7 @@ pub fn init(level: log::Level) -> Result<(), SetLoggerError> {
 }
 
 /// Colorize a string with the color associated with the log level
-fn paint(level: &log::Level, msg: &str) -> std::string::String {
+fn paint(level: log::Level, msg: &str) -> std::string::String {
     if atty::is(atty::Stream::Stderr) {
         match level {
             log::Level::Error => Color::Red.paint(msg).to_string(),
