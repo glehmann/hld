@@ -94,6 +94,48 @@ fn test_deduplication() {
     assert_eq!(inos(foo.path()), inos(bar.path()));
 }
 
+#[test]
+fn test_no_deduplication_different_files() {
+    let tmp = assert_fs::TempDir::new().unwrap();
+    let foo = tmp.child("foo.txt");
+    let bar = tmp.child("bar.txt");
+    foo.write_str(&lipsum(100)).unwrap();
+    bar.write_str(&lipsum(101)).unwrap();
+
+    assert_ne!(inos(foo.path()), inos(bar.path()));
+
+    Command::main_binary()
+        .unwrap()
+        .arg(tmp.child("*.txt").path())
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::is_empty());
+
+    assert_ne!(inos(foo.path()), inos(bar.path()));
+}
+
+#[test]
+fn test_no_deduplication_empty_files() {
+    let tmp = assert_fs::TempDir::new().unwrap();
+    let foo = tmp.child("foo.txt");
+    let bar = tmp.child("bar.txt");
+    foo.touch().unwrap();
+    bar.touch().unwrap();
+
+    assert_ne!(inos(foo.path()), inos(bar.path()));
+
+    Command::main_binary()
+        .unwrap()
+        .arg(tmp.child("*.txt").path())
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::is_empty());
+
+    assert_ne!(inos(foo.path()), inos(bar.path()));
+}
+
 use std::fs;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
