@@ -27,9 +27,12 @@ fn test_help() {
         .assert()
         .success()
         .stdout(
-            predicate::str::contains("Hard Link Deduplicator").and(predicate::str::contains(
-                "-r, --recursive    Recursively find the files in the provided paths",
-            )),
+            predicate::str::contains("Hard Link Deduplicator").and(
+                predicate::str::is_match(
+                    r"-r, --recursive +Recursively find the files in the provided paths",
+                )
+                .unwrap(),
+            ),
         )
         .stderr(predicate::str::is_empty());
 }
