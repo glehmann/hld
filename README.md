@@ -1,4 +1,10 @@
-* add a README.md
+
+Hard Link Deduplicator
+
+TODO
+====
+
+* complete the README.md
 * factorize the computation of the digest in the cached and non cached files
 * test the --recursive option
 * the the --dry-run option
