@@ -16,7 +16,7 @@ fn test_empty_run() {
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::is_empty());
+        .stderr(predicate::str::contains("0 bytes saved in the deduplication of 0 files"));
 }
 
 #[test]
@@ -113,7 +113,7 @@ fn test_no_deduplication_different_files() {
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::is_empty());
+        .stderr(predicate::str::contains("0 bytes saved in the deduplication of 0 files"));
 
     assert_ne!(inos(foo.path()), inos(bar.path()));
 }
@@ -134,7 +134,7 @@ fn test_no_deduplication_empty_files() {
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::is_empty());
+        .stderr(predicate::str::contains("0 bytes saved in the deduplication of 0 files"));
 
     assert_ne!(inos(foo.path()), inos(bar.path()));
 }

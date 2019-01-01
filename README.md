@@ -11,3 +11,5 @@ TODO
 * test the --parallel option
 * run automated tests
 * ensure that the newest date is kept on the hardlinked files (probably)
+* find a better way to pass user options without changing the function signature
+  at each new option

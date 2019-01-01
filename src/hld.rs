@@ -195,14 +195,19 @@ pub fn hardlink_deduplicate(
     clear_cache: bool,
 ) -> Result<()> {
     let dups = find_file_duplicates(paths, caches, dry_run, cache_path, clear_cache)?;
+    let mut dedup_size: u64 = 0;
+    let mut dedup_files: usize = 0;
     for dup in dups {
-        file_hardlinks(&dup[0], &dup[1..], dry_run)?;
+        dedup_size += file_hardlinks(&dup[0], &dup[1..], dry_run)?;
+        dedup_files += dup.len() - 1;
     }
+    info!("{} bytes saved in the deduplication of {} files", dedup_size, dedup_files);
     Ok(())
 }
 
-fn file_hardlinks(path: &Path, hardlinks: &[&PathBuf], dry_run: bool) -> Result<()> {
-    let inode = inos(path)?;
+fn file_hardlinks(path: &Path, hardlinks: &[&PathBuf], dry_run: bool) -> Result<u64> {
+    let metadata = fs::metadata(path).with_path(path)?;
+    let inode = inos_m(&metadata);
     for hardlink in hardlinks {
         let hinode = inos(hardlink)?;
         if hinode != inode && hinode.0 == inode.0 {
@@ -215,7 +220,7 @@ fn file_hardlinks(path: &Path, hardlinks: &[&PathBuf], dry_run: bool) -> Result<
             debug!("{} and {} are already hardlinked", hardlink.display(), path.display());
         }
     }
-    Ok(())
+    Ok(metadata.len() * hardlinks.len() as u64)
 }
 
 pub fn glob_to_files(paths: &[String]) -> Result<Vec<PathBuf>> {
