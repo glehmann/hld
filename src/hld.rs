@@ -211,7 +211,7 @@ fn file_hardlinks(path: &Path, hardlinks: &[&PathBuf], dry_run: bool) -> Result<
     for hardlink in hardlinks {
         let hinode = inos(hardlink)?;
         if hinode != inode && hinode.0 == inode.0 {
-            info!("{} -> {}", hardlink.display(), path.display());
+            debug!("hardlinking {} and {}", hardlink.display(), path.display());
             if !dry_run {
                 std::fs::remove_file(hardlink).with_path(hardlink)?;
                 std::fs::hard_link(path, hardlink).with_path(path)?;

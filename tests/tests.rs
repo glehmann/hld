@@ -92,7 +92,7 @@ fn test_deduplication() {
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains("foo.txt").and(predicate::str::contains("bar.txt")));
+        .stderr(predicate::str::contains(format!("{} bytes saved in the deduplication of 1 files", lorem_ipsum.len())));
 
     assert_eq!(inos(foo.path()), inos(bar.path()));
 }
@@ -196,7 +196,7 @@ fn test_deduplication_with_cache() {
         .stdout(predicate::str::is_empty())
         .stderr(
             predicate::str::contains(format!(
-                "{} -> {}",
+                "debug: hardlinking {} and {}",
                 foo.path().display(),
                 bar.path().display()
             ))
