@@ -126,9 +126,15 @@ fn update_cache(
     dry_run: bool,
     cache_path: &Path,
 ) -> Result<HashMap<PathBuf, Digest>> {
+    // locking the cache
+    let lock_path = cache_path.with_extension("lock");
+    let lock_file = File::create(&lock_path).with_path(&lock_path)?;
+    lock_file.lock_exclusive().with_path(&lock_path)?;
+
     let cache: HashMap<PathBuf, Digest> = File::open(&cache_path)
         .ok()
         .map_or_else(HashMap::new, |reader| {
+            debug!("reading cache");
             bincode::deserialize_from(reader).unwrap_or_default()
         });
     let original_cache_size = cache.len();
@@ -160,10 +166,11 @@ fn update_cache(
     if updated && !dry_run {
         debug!("saving updated cache");
         let output_file = File::create(&cache_path).with_path(&cache_path)?;
-        output_file.lock_exclusive().with_path(&cache_path)?;
         bincode::serialize_into(&output_file, &live_cache)?;
-        output_file.unlock().with_path(&cache_path)?;
     }
+
+    // unlock the cache
+    lock_file.unlock().with_path(&cache_path)?;
 
     Ok(new_digests)
 }
