@@ -136,6 +136,84 @@ fn test_no_deduplication_empty_files() {
     assert_ne!(inos(foo.path()), inos(bar.path()));
 }
 
+#[test]
+fn test_deduplication_with_cache() {
+    let lorem_ipsum = lipsum(100);
+    // set up the test dir
+    let tmp = assert_fs::TempDir::new().unwrap();
+    let foo = tmp.child("foo.txt");
+    let bar = tmp.child("bar.txt");
+    foo.write_str(&lorem_ipsum).unwrap();
+    bar.write_str(&lorem_ipsum).unwrap();
+
+    let cache_dir = assert_fs::TempDir::new().unwrap();
+    let cache_path = cache_dir.child("digests");
+
+    assert_ne!(inos(foo.path()), inos(bar.path()));
+    cache_path.assert(predicate::path::missing());
+
+    // first warm up the cache
+    Command::main_binary()
+        .unwrap()
+        .args(&[
+            "--log-level",
+            "debug",
+            "--cache",
+            &tmp.child("foo.txt").path().display().to_string(),
+            "--cache-path",
+            &cache_path.path().display().to_string(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(
+            predicate::str::contains(format!(
+                "debug: computing digest of {}",
+                foo.path().display()
+            ))
+            .and(predicate::str::contains("debug: saving updated cache")),
+        );
+
+    cache_path.assert(predicate::path::exists());
+
+    // then deduplicate
+    Command::main_binary()
+        .unwrap()
+        .args(&[
+            "--log-level",
+            "debug",
+            "--cache",
+            &foo.path().display().to_string(),
+            "--cache-path",
+            &cache_path.path().display().to_string(),
+            &tmp.child("*.txt").path().display().to_string(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(
+            predicate::str::contains(format!(
+                "{} -> {}",
+                foo.path().display(),
+                bar.path().display()
+            ))
+            .and(predicate::str::contains("debug: saving updated cache").not())
+            .and(
+                predicate::str::contains(format!(
+                    "debug: computing digest of {}",
+                    foo.path().display()
+                ))
+                .not(),
+            )
+            .and(predicate::str::contains(format!(
+                "debug: computing digest of {}",
+                bar.path().display()
+            ))),
+        );
+
+    assert_eq!(inos(foo.path()), inos(bar.path()));
+}
+
 use std::fs;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
