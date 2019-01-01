@@ -69,7 +69,7 @@ fn file_digest(path: &Path) -> Result<Digest> {
 /// find the duplicates in the provided paths
 fn find_file_duplicates<'a>(
     paths: &'a [PathBuf],
-    caches: &[PathBuf],
+    caches: &'a [PathBuf],
     dry_run: bool,
     cache_path: &Path,
     clear_cache: bool,
@@ -78,9 +78,13 @@ fn find_file_duplicates<'a>(
     let ino_map = Mutex::new(HashMap::new());
     let cache = update_cache(caches, dry_run, cache_path, clear_cache)?;
 
+    let mut all_paths: Vec<&'a PathBuf> = vec![];
+    all_paths.extend(paths.iter());
+    all_paths.extend(caches.iter());
+
     // get some metadata and filter out the empty files
     let mut path_inos: Vec<(&'a PathBuf, (u64, u64))> = Vec::new();
-    for path in paths {
+    for path in all_paths {
         let metadata = fs::metadata(path).with_path(path)?;
         if metadata.len() > 0 {
             path_inos.push((path, inos_m(&metadata)));
@@ -155,6 +159,7 @@ fn update_cache(
         .collect();
     let live_cache_size = live_cache.len();
     let updated = original_cache_size != live_cache_size;
+
     // compute the digest for the entries not already there
     let new_digests = paths
         .par_iter()

@@ -189,7 +189,7 @@ fn test_deduplication_with_cache() {
             &foo.path().display().to_string(),
             "--cache-path",
             &cache_path.path().display().to_string(),
-            &tmp.child("*.txt").path().display().to_string(),
+            &bar.path().display().to_string(),
         ])
         .assert()
         .success()
