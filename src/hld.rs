@@ -211,6 +211,8 @@ fn file_hardlinks(path: &Path, hardlinks: &[&PathBuf], dry_run: bool) -> Result<
                 std::fs::remove_file(hardlink).with_path(hardlink)?;
                 std::fs::hard_link(path, hardlink).with_path(path)?;
             }
+        } else {
+            debug!("{} and {} are already hardlinked", hardlink.display(), path.display());
         }
     }
     Ok(())
