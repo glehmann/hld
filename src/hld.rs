@@ -170,7 +170,7 @@ fn update_cache(
     let updated = updated || live_cache_size != live_cache.len();
 
     if updated && !dry_run {
-        debug!("saving updated cache");
+        debug!("saving updated cache with {} entries", live_cache.len());
         let output_file = File::create(&cache_path).with_path(&cache_path)?;
         bincode::serialize_into(&output_file, &live_cache)?;
     }
