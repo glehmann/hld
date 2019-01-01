@@ -72,10 +72,11 @@ fn find_file_duplicates<'a>(
     caches: &[PathBuf],
     dry_run: bool,
     cache_path: &Path,
+    clear_cache: bool,
 ) -> Result<Vec<Vec<&'a PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let ino_map = Mutex::new(HashMap::new());
-    let cache = update_cache(caches, dry_run, cache_path)?;
+    let cache = update_cache(caches, dry_run, cache_path, clear_cache)?;
 
     // get some metadata and filter out the empty files
     let mut path_inos: Vec<(&'a PathBuf, (u64, u64))> = Vec::new();
@@ -125,18 +126,23 @@ fn update_cache(
     paths: &[PathBuf],
     dry_run: bool,
     cache_path: &Path,
+    clear_cache: bool,
 ) -> Result<HashMap<PathBuf, Digest>> {
     // locking the cache
     let lock_path = cache_path.with_extension("lock");
     let lock_file = File::create(&lock_path).with_path(&lock_path)?;
     lock_file.lock_exclusive().with_path(&lock_path)?;
 
-    let cache: HashMap<PathBuf, Digest> = File::open(&cache_path)
-        .ok()
-        .map_or_else(HashMap::new, |reader| {
-            debug!("reading cache");
-            bincode::deserialize_from(reader).unwrap_or_default()
-        });
+    let cache: HashMap<PathBuf, Digest> = if clear_cache {
+        hashmap! {}
+    } else {
+        File::open(&cache_path)
+            .ok()
+            .map_or_else(HashMap::new, |reader| {
+                debug!("reading cache");
+                bincode::deserialize_from(reader).unwrap_or_default()
+            })
+    };
     let original_cache_size = cache.len();
 
     // remove dead entries
@@ -181,8 +187,9 @@ pub fn hardlink_deduplicate(
     caches: &[PathBuf],
     dry_run: bool,
     cache_path: &Path,
+    clear_cache: bool,
 ) -> Result<()> {
-    let dups = find_file_duplicates(paths, caches, dry_run, cache_path)?;
+    let dups = find_file_duplicates(paths, caches, dry_run, cache_path, clear_cache)?;
     for dup in dups {
         file_hardlinks(&dup[0], &dup[1..], dry_run)?;
     }

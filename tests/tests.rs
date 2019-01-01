@@ -214,6 +214,67 @@ fn test_deduplication_with_cache() {
     assert_eq!(inos(foo.path()), inos(bar.path()));
 }
 
+#[test]
+fn test_clear_cache() {
+    let lorem_ipsum = lipsum(100);
+    // set up the test dir
+    let tmp = assert_fs::TempDir::new().unwrap();
+    let foo = tmp.child("foo.txt");
+    foo.write_str(&lorem_ipsum).unwrap();
+
+    let cache_dir = assert_fs::TempDir::new().unwrap();
+    let cache_path = cache_dir.child("digests");
+
+    cache_path.assert(predicate::path::missing());
+
+    // first warm up the cache
+    Command::main_binary()
+        .unwrap()
+        .args(&[
+            "--log-level",
+            "debug",
+            "--cache",
+            &tmp.child("foo.txt").path().display().to_string(),
+            "--cache-path",
+            &cache_path.path().display().to_string(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(
+            predicate::str::contains(format!(
+                "debug: computing digest of {}",
+                foo.path().display()
+            ))
+            .and(predicate::str::contains("debug: saving updated cache")),
+        );
+
+    cache_path.assert(predicate::path::exists());
+
+    // check that the digest is recomputed with --clear-cache
+    Command::main_binary()
+        .unwrap()
+        .args(&[
+            "--log-level",
+            "debug",
+            "--cache",
+            &tmp.child("foo.txt").path().display().to_string(),
+            "--cache-path",
+            &cache_path.path().display().to_string(),
+            "--clear-cache",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(
+            predicate::str::contains(format!(
+                "debug: computing digest of {}",
+                foo.path().display()
+            ))
+            .and(predicate::str::contains("debug: saving updated cache")),
+        );
+}
+
 use std::fs;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;

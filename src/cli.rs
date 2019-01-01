@@ -17,6 +17,10 @@ pub struct Config {
     #[structopt(short = "-C", long = "cache-path", parse(from_os_str))]
     pub cache_path_opt: Option<PathBuf>,
 
+    /// Clear the cache file
+    #[structopt(long = "clear-cache")]
+    pub clear_cache: bool,
+
     /// Recursively find the files in the provided paths
     #[structopt(short = "r", long = "recursive")]
     pub recursive: bool,
