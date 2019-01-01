@@ -3,7 +3,6 @@ extern crate structopt;
 extern crate log;
 extern crate fs2;
 extern crate glob;
-extern crate num_cpus;
 extern crate rayon;
 #[macro_use]
 extern crate maplit;
