@@ -3,6 +3,24 @@ Hard Link Deduplicator
 
 [![Travis Status](https://api.travis-ci.com/glehmann/hld.svg?branch=master)](https://travis-ci.com/glehmann/hld)
 
+Install
+-------
+
+`hld` is currently only available from sources. To install it, you need
+a [Rust installation](https://www.rust-lang.org/). `hld` compiles with rust
+stable or newer. In general, `hld` tracks the latest stable release of the
+Rust compiler.
+
+```
+$ git clone https://github.com/glehmann/hld
+...
+$ cd hld
+$ cargo install
+...
+$ $HOME/.cargo/bin/hld --version
+hld 0.1.0
+```
+
 Shell completion
 ----------------
 
@@ -20,6 +38,40 @@ activated by sourcing the file. Again for fish:
 ```fish
 source ~/.config/fish/completions/hld.fish
 ```
+
+Building
+--------
+
+You need a [Rust installation](https://www.rust-lang.org/). `hld` compiles
+with rust stable or newer. In general, `hld` tracks the latest stable release
+of the Rust compiler.
+
+To build `hld`:
+
+```
+$ git clone https://github.com/glehmann/hld
+...
+$ cd hld
+$ cargo build --release
+...
+$ ./target/release/hld --version
+hld 0.1.0
+```
+
+Testing
+-------
+
+To run the full test suite, use:
+
+```
+$ cargo test
+...
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+```
+
+from the repository root.
+
 
 TODO
 ----
