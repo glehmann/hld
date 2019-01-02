@@ -1,36 +1,42 @@
 sudo: false
 language: rust
-rust:
-- stable
-- beta
-- nightly
+env: # required for allow_failures
 matrix:
+  fast_finish: true
+  allow_failures:
+    - name: rust beta
+    - name: rust nightly
   include:
-  - env: RUSTFMT
-    rust: 1.31.0  # `stable`: Locking down for consistent behavior
-    install:
-      - rustup component add rustfmt-preview
-    script:
-      - cargo fmt -- --check
-  - env: RUSTFLAGS="-D warnings"
-    rust: 1.31.0  # `stable`: Locking down for consistent behavior
-    install:
-    script:
-    - cargo check --tests
-  - env: CLIPPY
-    rust: stable
-    install:
-      - rustup component add clippy-preview
-    script:
-      - cargo clippy -- -D clippy
+    - name: rust stable
+      rust: stable
 
-install:
-- rustc -Vv
-- cargo -V
-- export PATH=$HOME/.cargo/bin:$PATH
+    - name: rust beta
+      rust: beta
+
+    - name: rust nightly
+      rust: nightly
+
+    - name: fmt
+      rust: stable
+      install:
+        - rustup component add rustfmt-preview
+      script:
+        - cargo fmt -- --check
+
+    - name: warnings
+      rust: stable
+      env: RUSTFLAGS="-D warnings"
+      script:
+        - cargo check --tests
+
+    - name: clippy
+      rust: stable
+      install:
+        - rustup component add clippy-preview
+      script:
+        - cargo clippy -- -D clippy
 
 script:
-- cargo check --verbose
 - cargo test --verbose
 
 branches:
