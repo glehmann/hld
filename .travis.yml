@@ -1,6 +1,5 @@
 sudo: false
 language: rust
-env: # required for allow_failures
 matrix:
   fast_finish: true
   allow_failures:
