@@ -364,10 +364,59 @@ fn test_completion() {
     }
 }
 
+#[test]
+fn test_recursive() {
+    let lorem_ipsum = lipsum(100);
+    // set up the test dir
+    let tmp = assert_fs::TempDir::new().unwrap();
+    let subdir = tmp.child("hop").child("hop").child("hop");
+    let foo = subdir.child("foo.txt");
+    let bar = subdir.child("bar.txt");
+    subdir.mkdir_all().unwrap();
+    foo.write_str(&lorem_ipsum).unwrap();
+    bar.write_str(&lorem_ipsum).unwrap();
+
+    assert_ne!(inos(foo.path()), inos(bar.path()));
+
+    Command::main_binary()
+        .unwrap()
+        .args(&["--recursive", &tmp.path().display().to_string()])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::contains(format!(
+            "{} bytes saved in the deduplication of 1 files",
+            lorem_ipsum.len()
+        )));
+
+    assert_eq!(inos(foo.path()), inos(bar.path()));
+}
+
+// utility functions from here
+
 use std::fs;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
+
+pub trait TestPathChild {
+    fn child<P>(&self, path: P) -> assert_fs::fixture::ChildPath
+    where
+        P: AsRef<std::path::Path>;
+    fn mkdir_all(&self) -> std::io::Result<()>;
+}
+
+impl TestPathChild for assert_fs::fixture::ChildPath {
+    fn child<P>(&self, path: P) -> assert_fs::fixture::ChildPath
+    where
+        P: AsRef<std::path::Path>,
+    {
+        assert_fs::fixture::ChildPath::new(self.path().join(path))
+    }
+    fn mkdir_all(&self) -> std::io::Result<()> {
+        std::fs::create_dir_all(self.path())
+    }
+}
 
 /// returns the inodes of the partition and of the file
 fn inos(path: &Path) -> (u64, u64) {
