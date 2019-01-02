@@ -36,6 +36,10 @@ pub struct Config {
     /// Log level
     #[structopt(short = "l", long = "log-level", default_value = "INFO")]
     pub log_level: log::Level,
+
+    /// Generate the completion code for this shell
+    #[structopt(long = "completion")]
+    pub completion: Option<structopt::clap::Shell>,
 }
 
 impl Config {

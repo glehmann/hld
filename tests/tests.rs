@@ -311,6 +311,19 @@ fn test_clear_cache() {
         );
 }
 
+#[test]
+fn test_completion() {
+    for shell in &["bash", "fish", "zsh"] {
+        Command::main_binary()
+            .unwrap()
+            .args(&["--completion", shell])
+            .assert()
+            .success()
+            .stdout(predicate::str::is_empty().not())
+            .stderr(predicate::str::is_empty());
+    }
+}
+
 use std::fs;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;

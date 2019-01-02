@@ -17,11 +17,17 @@ mod cli;
 mod cli_logger;
 mod hld;
 
+use std::io;
 use structopt::StructOpt;
 
 fn main() {
     let args = cli::Config::from_args();
     cli_logger::init(args.log_level).unwrap();
+
+    if let Some(shell) = args.completion {
+        cli::Config::clap().gen_completions_to("hld", shell, &mut io::stdout());
+        std::process::exit(0);
+    }
 
     if let Some(parallel) = args.parallel {
         rayon::ThreadPoolBuilder::new()
