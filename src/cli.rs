@@ -29,6 +29,10 @@ pub struct Config {
     #[structopt(short = "n", long = "dry-run")]
     pub dry_run: bool,
 
+    /// Use symbolic links instead of hard links
+    #[structopt(short = "s", long = "symbolic")]
+    pub symbolic: bool,
+
     /// Parallelism level
     #[structopt(short = "j", long = "parallel")]
     pub parallel: Option<usize>,

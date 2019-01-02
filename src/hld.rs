@@ -193,12 +193,13 @@ pub fn hardlink_deduplicate(
     dry_run: bool,
     cache_path: &Path,
     clear_cache: bool,
+    symbolic: bool,
 ) -> Result<()> {
     let dups = find_file_duplicates(paths, caches, dry_run, cache_path, clear_cache)?;
     let mut dedup_size: u64 = 0;
     let mut dedup_files: usize = 0;
     for dup in dups {
-        dedup_size += file_hardlinks(&dup[0], &dup[1..], dry_run)?;
+        dedup_size += file_hardlinks(&dup[0], &dup[1..], dry_run, symbolic)?;
         dedup_files += dup.len() - 1;
     }
     info!(
@@ -208,22 +209,41 @@ pub fn hardlink_deduplicate(
     Ok(())
 }
 
-fn file_hardlinks(path: &Path, hardlinks: &[&PathBuf], dry_run: bool) -> Result<u64> {
+fn file_hardlinks(
+    path: &Path,
+    hardlinks: &[&PathBuf],
+    dry_run: bool,
+    symbolic: bool,
+) -> Result<u64> {
     let metadata = fs::metadata(path).with_path(path)?;
     let inode = inos_m(&metadata);
     for hardlink in hardlinks {
         let hinode = inos(hardlink)?;
         if hinode != inode && hinode.0 == inode.0 {
-            debug!("hardlinking {} and {}", hardlink.display(), path.display());
+            debug!(
+                "{} {} and {}",
+                if symbolic {
+                    "symlinking"
+                } else {
+                    "hardlinking"
+                },
+                hardlink.display(),
+                path.display()
+            );
             if !dry_run {
                 std::fs::remove_file(hardlink).with_path(hardlink)?;
-                std::fs::hard_link(path, hardlink).with_path(path)?;
+                if symbolic {
+                    std::os::unix::fs::symlink(path, hardlink).with_path(path)?;
+                } else {
+                    std::fs::hard_link(path, hardlink).with_path(path)?;
+                }
             }
         } else {
             debug!(
-                "{} and {} are already hardlinked",
+                "{} and {} are already {}",
                 hardlink.display(),
-                path.display()
+                path.display(),
+                if symbolic { "symlinked" } else { "hardlinked" },
             );
         }
     }

@@ -108,3 +108,5 @@ TODO
 * find a better way to pass user options without changing the function signature
   at each new option
 * code coverage (look at codecov and coveralls)
+* which duplicate do we keep when symlinking? The first one? From the caches if possible?
+* test the symbolic option
