@@ -30,6 +30,7 @@ fn main() {
     }
 
     if let Some(parallel) = args.parallel {
+        debug!("using {} threads at most", parallel);
         rayon::ThreadPoolBuilder::new()
             .num_threads(parallel)
             .build_global()

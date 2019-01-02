@@ -53,6 +53,17 @@ fn test_log_level() {
 }
 
 #[test]
+fn test_parallel() {
+    Command::main_binary()
+        .unwrap()
+        .args(&["--log-level", "debug", "--parallel", "5"])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::contains("debug: using 5 threads at most"));
+}
+
+#[test]
 fn test_version() {
     Command::main_binary()
         .unwrap()
