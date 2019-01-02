@@ -22,11 +22,11 @@ matrix:
       script:
         - cargo fmt -- --check
 
-    - name: warnings
-      rust: stable
-      env: RUSTFLAGS="-D warnings"
-      script:
-        - cargo check --tests
+    # - name: warnings
+    #   rust: stable
+    #   env: RUSTFLAGS="-D warnings"
+    #   script:
+    #     - cargo check --tests
 
     - name: clippy
       rust: stable
