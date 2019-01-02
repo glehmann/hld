@@ -15,3 +15,5 @@ TODO
 * find a better way to pass user options without changing the function signature
   at each new option
 * bash/zsh/fish completion
+* code coverage (look at codecov and coveralls)
+* test that a non readable files produce a nice error message
