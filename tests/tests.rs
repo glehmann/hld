@@ -105,6 +105,46 @@ fn test_deduplication() {
 }
 
 #[test]
+fn test_dryrun() {
+    let lorem_ipsum = lipsum(100);
+    // set up the test dir
+    let tmp = assert_fs::TempDir::new().unwrap();
+    let foo = tmp.child("foo.txt");
+    let bar = tmp.child("bar.txt");
+    foo.write_str(&lorem_ipsum).unwrap();
+    bar.write_str(&lorem_ipsum).unwrap();
+
+    let cache_dir = assert_fs::TempDir::new().unwrap();
+    let cache_path = cache_dir.child("digests");
+
+    assert_ne!(inos(foo.path()), inos(bar.path()));
+    cache_path.assert(predicate::path::missing());
+
+    Command::main_binary()
+        .unwrap()
+        .args(&[
+            "--log-level",
+            "debug",
+            "--cache",
+            &foo.path().display().to_string(),
+            "--cache-path",
+            &cache_path.path().display().to_string(),
+            &bar.path().display().to_string(),
+            "--dry-run",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::contains(format!(
+            "{} bytes saved in the deduplication of 1 files",
+            lorem_ipsum.len()
+        )));
+
+    assert_ne!(inos(foo.path()), inos(bar.path()));
+    cache_path.assert(predicate::path::missing());
+}
+
+#[test]
 fn test_unreadable_file() {
     let lorem_ipsum = lipsum(100);
     // set up the test dir
