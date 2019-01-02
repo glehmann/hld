@@ -2,15 +2,7 @@ Hard Link Deduplicator
 ======================
 
 `hld` finds the duplicated files and hardlinks them together in order to save
-some disk space.
-
-It works with all the available core by default and uses the [BLAKE2](https://blake2.net/)
-hashing function in order to be both very fast and with an extremely low
-chance of collision.
-
-Because of its caching feature, it is an efficient way to deduplicate files
-that might have been copied by some automated process — for example a maven
-build.
+some disk space. And it's made to be fast.
 
 Here is an example session on a modern (2017) laptop:
 
@@ -28,6 +20,63 @@ sys 0.36
 400MB — 44% of the build directory size — saved in just 0.7 seconds :-)
 
 [![Travis Status](https://api.travis-ci.com/glehmann/hld.svg?branch=master)](https://travis-ci.com/glehmann/hld)
+
+Features
+--------
+
+It works with all the available core by default and uses the [BLAKE2](https://blake2.net/)
+hashing function in order to be both very fast and with an extremely low
+chance of collision.
+
+Because of its caching feature, it is an efficient way to deduplicate files
+that might have been copied by some automated process — for example a maven
+build.
+
+Usage
+-----
+
+#### globs
+
+`hld` takes a set of globs as argument. The globs are used to find the
+candidate files for deduplication. They support the `**` notation to traverse
+any number of directories. For example:
+
+* `hld target/*.jar` deduplicates all the `jar` files directly in the `target`
+  directory;
+* `hld target/**/*.jar` deduplicates all the `jar` files in the `target`
+  directory and its subdirectories.
+
+Several globs may be passed on the command line in order to work with
+several directories and/or several file name patterns. For example:
+`hld target/*.jar images/**/*.png`.
+
+#### caching
+
+In addition to the raw globs of the previous chapter, some cached globs may
+be used. They act all the same than the raw globs, but their BLAKE2 digest
+value is saved for a latter reuse. They must be used on files that are
+guarenteed to *not* change. Cached globs are passed with a `--cache`,
+or `-c` option.
+
+For example: `hld target/* --cache stable/*` will deduplicate
+all the files in both `target` and `stable`, and will also cache the
+digests of the files in `stable`. The cached digests of `stable` will
+then be reused at a latter `hld` call, in order to speed up the execution.
+
+The cache path may be specified with the `--cache-path` option or `-C`,
+in order to deal with several sets of caches, depending on the execution
+context.
+
+The cache may be cleared with the option `--clear-cache`.
+
+#### dry run
+
+Using the option `--dry-run` or `-n` prevents `hld` to modify anytring on
+the disk, cache included.
+
+For example: `hld target/* --cache stable/* --dry-run` only show how many
+files would be deduplicated and how much space would be saved, but actually
+does nothing.
 
 Install
 -------
@@ -102,7 +151,6 @@ from the repository root.
 TODO
 ----
 
-* complete the README.md
 * factorize the computation of the digest in the cached and non cached files
 * ensure that the newest date is kept on the hardlinked files (probably)
 * find a better way to pass user options without changing the function signature
