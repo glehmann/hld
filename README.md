@@ -1,7 +1,7 @@
 Hard Link Deduplicator
 ======================
 
-`hdl` finds the duplicated files and hardlinks them together in order to save
+`hld` finds the duplicated files and hardlinks them together in order to save
 some disk space.
 
 It works with all the available core by default and uses the [BLAKE2](https://blake2.net/)
