@@ -43,6 +43,8 @@ fn main() {
     };
     let files = hld::glob_to_files(&file_globs).unwrap();
     let caches = hld::glob_to_files(&cache_globs).unwrap();
+    trace!("files: {:?}", files);
+    trace!("caches: {:?}", caches);
     if let Err(err) =
         hld::hardlink_deduplicate(&files, &caches, args.dry_run, &cache_path, args.clear_cache)
     {

@@ -7,6 +7,8 @@ use assert_cmd::prelude::*;
 use assert_fs::prelude::*;
 use lipsum::lipsum;
 use predicates::prelude::*;
+use std::fs::Permissions;
+use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
 
 #[test]
@@ -100,6 +102,28 @@ fn test_deduplication() {
         )));
 
     assert_eq!(inos(foo.path()), inos(bar.path()));
+}
+
+#[test]
+fn test_unreadable_file() {
+    let lorem_ipsum = lipsum(100);
+    // set up the test dir
+    let tmp = assert_fs::TempDir::new().unwrap();
+    let foo = tmp.child("foo.txt");
+    foo.write_str(&lorem_ipsum).unwrap();
+
+    fs::set_permissions(foo.path(), Permissions::from_mode(0o000)).unwrap();
+
+    Command::main_binary()
+        .unwrap()
+        .arg(foo.path())
+        .assert()
+        .failure()
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::contains(format!(
+            "error: {}: Permission denied (os error 13)",
+            foo.path().display()
+        )));
 }
 
 #[test]
