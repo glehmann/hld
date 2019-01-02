@@ -2,15 +2,15 @@ Hard Link Deduplicator
 ======================
 
 `hld` finds the duplicated files and hardlinks them together in order to save
-some disk space. And it's made to be fast.
+some disk space. And it's made to be fast!
 
 Here is an example session on a modern (2017) laptop:
 
 ```fish
-> du -sh myproject ~/.m2
+$ du -sh myproject ~/.m2
 896M    myproject
 912M    .m2
-> time hld -r -c ~/.m2 myproject
+$ time hld -r -c ~/.m2 myproject
 420168135 bytes saved in the deduplication of 671 files
 real 0.69
 user 2.30
