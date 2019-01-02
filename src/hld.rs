@@ -201,7 +201,10 @@ pub fn hardlink_deduplicate(
         dedup_size += file_hardlinks(&dup[0], &dup[1..], dry_run)?;
         dedup_files += dup.len() - 1;
     }
-    info!("{} bytes saved in the deduplication of {} files", dedup_size, dedup_files);
+    info!(
+        "{} bytes saved in the deduplication of {} files",
+        dedup_size, dedup_files
+    );
     Ok(())
 }
 
@@ -217,7 +220,11 @@ fn file_hardlinks(path: &Path, hardlinks: &[&PathBuf], dry_run: bool) -> Result<
                 std::fs::hard_link(path, hardlink).with_path(path)?;
             }
         } else {
-            debug!("{} and {} are already hardlinked", hardlink.display(), path.display());
+            debug!(
+                "{} and {} are already hardlinked",
+                hardlink.display(),
+                path.display()
+            );
         }
     }
     Ok(metadata.len() * hardlinks.len() as u64)
