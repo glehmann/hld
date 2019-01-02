@@ -1,6 +1,32 @@
 Hard Link Deduplicator
 ======================
 
+`hdl` finds the duplicated files and hardlinks them together in order to save
+some disk space.
+
+It works with all the available core by default and uses the [BLAKE2](https://blake2.net/)
+hashing function in order to be both very fast and with an extremely low
+chance of collision.
+
+Because of its caching feature, it is an efficient way to deduplicate files
+that might have been copied by some automated process — for example a maven
+build.
+
+Here is an example session on a modern (2017) laptop:
+
+```fish
+> du -sh myproject ~/.m2
+896M    myproject
+912M    .m2
+> time hld -r -c ~/.m2 myproject
+420168135 bytes saved in the deduplication of 671 files
+real 0.69
+user 2.30
+sys 0.36
+```
+
+400MB — 44% of the build directory size — saved in just 0.7 seconds :-)
+
 [![Travis Status](https://api.travis-ci.com/glehmann/hld.svg?branch=master)](https://travis-ci.com/glehmann/hld)
 
 Install
