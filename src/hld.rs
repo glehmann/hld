@@ -176,10 +176,12 @@ fn update_cache(
     live_cache.extend(new_digests.clone());
     let updated = updated || live_cache_size != live_cache.len();
 
-    if updated && !dry_run {
+    if updated {
         debug!("saving updated cache with {} entries", live_cache.len());
-        let output_file = File::create(&cache_path).with_path(&cache_path)?;
-        bincode::serialize_into(&output_file, &live_cache)?;
+        if !dry_run {
+            let output_file = File::create(&cache_path).with_path(&cache_path)?;
+            bincode::serialize_into(&output_file, &live_cache)?;
+        }
     }
 
     // unlock the cache
