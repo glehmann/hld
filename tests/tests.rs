@@ -1,8 +1,3 @@
-extern crate assert_cmd;
-extern crate assert_fs;
-extern crate lipsum;
-extern crate predicates;
-
 use assert_cmd::prelude::*;
 use assert_fs::prelude::*;
 use lipsum::lipsum;

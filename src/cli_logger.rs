@@ -65,10 +65,6 @@
 //! TODO: write a small example that uses structopt
 //!
 
-extern crate ansi_term;
-extern crate atty;
-extern crate log;
-
 use ansi_term::Color;
 use log::SetLoggerError;
 
