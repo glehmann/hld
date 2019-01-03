@@ -229,12 +229,8 @@ fn file_hardlinks(
         let hinode = inos(hardlink)?;
         if hinode != inode && hinode.0 == inode.0 {
             debug!(
-                "{} {} and {}",
-                match strategy {
-                    Strategy::SymLink => "symlinking",
-                    Strategy::HardLink => "hardlinking",
-                    Strategy::RefLink => "reflinking",
-                },
+                "{}ing {} and {}",
+                strategy.to_string(),
                 hardlink.display(),
                 path.display()
             );
@@ -250,14 +246,10 @@ fn file_hardlinks(
             }
         } else {
             debug!(
-                "{} and {} are already {}",
+                "{} and {} are already {}ed",
                 hardlink.display(),
                 path.display(),
-                match strategy {
-                    Strategy::SymLink => "symlinked",
-                    Strategy::HardLink => "hardlinked",
-                    Strategy::RefLink => "reflinked",
-                },
+                strategy.to_string(),
             );
         }
     }

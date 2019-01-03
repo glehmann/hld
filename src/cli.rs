@@ -91,6 +91,17 @@ impl FromStr for Strategy {
     }
 }
 
+impl ToString for Strategy {
+    fn to_string(&self) -> String {
+        match self {
+            Strategy::HardLink => "hardlink",
+            Strategy::SymLink => "symlink",
+            Strategy::RefLink => "reflink",
+        }
+        .to_owned()
+    }
+}
+
 impl Clone for Strategy {
     #[inline]
     fn clone(&self) -> Strategy {
