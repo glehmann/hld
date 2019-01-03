@@ -1,5 +1,6 @@
 use log;
 use std::path::PathBuf;
+use std::str::FromStr;
 use structopt::StructOpt;
 
 /// Hard Link Deduplicator
@@ -29,16 +30,16 @@ pub struct Config {
     #[structopt(short = "n", long = "dry-run")]
     pub dry_run: bool,
 
-    /// Use symbolic links instead of hard links
-    #[structopt(short = "s", long = "symbolic")]
-    pub symbolic: bool,
+    /// The linking strategy to use - either hardlink, symlink or reflink
+    #[structopt(short = "s", long = "strategy", default_value="hardlink")]
+    pub strategy: Strategy,
 
     /// Parallelism level
     #[structopt(short = "j", long = "parallel")]
     pub parallel: Option<usize>,
 
     /// Log level
-    #[structopt(short = "l", long = "log-level", default_value = "INFO")]
+    #[structopt(short = "l", long = "log-level", default_value = "info")]
     pub log_level: log::Level,
 
     /// Generate the completion code for this shell
@@ -65,5 +66,35 @@ impl Config {
         };
         debug!("cache path: {}", path.display());
         path
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Copy)]
+pub enum Strategy {
+    HardLink,
+    SymLink,
+    RefLink,
+}
+
+impl FromStr for Strategy {
+    type Err = ::hld::Error;
+    fn from_str(value: &str) -> Result<Strategy, Self::Err> {
+        let value = value.to_lowercase();
+        if value == "hardlink" {
+            Ok(Strategy::HardLink)
+        } else if value == "symlink" {
+            Ok(Strategy::SymLink)
+        } else if value == "reflink" {
+            Ok(Strategy::RefLink)
+        } else {
+            Err(::hld::Error::Strategy { name: value })
+        }
+    }
+}
+
+impl Clone for Strategy {
+    #[inline]
+    fn clone(&self) -> Strategy {
+        *self
     }
 }

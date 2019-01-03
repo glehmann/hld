@@ -12,6 +12,7 @@ extern crate atty;
 extern crate bincode;
 extern crate blake2_rfc;
 extern crate custom_error;
+extern crate reflink;
 
 mod cli;
 mod cli_logger;
@@ -58,7 +59,7 @@ fn main() {
         args.dry_run,
         &cache_path,
         args.clear_cache,
-        args.symbolic,
+        args.strategy,
     ) {
         error!("{}", err);
         std::process::exit(1);

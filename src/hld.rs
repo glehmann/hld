@@ -1,5 +1,6 @@
 use bincode;
 use blake2_rfc::blake2b::Blake2b;
+use cli::Strategy;
 use custom_error::custom_error;
 use fs2::FileExt;
 use rayon::prelude::*;
@@ -25,6 +26,7 @@ custom_error! {pub Error
     // Io {source: io::Error} = "{source}",
     Glob {source: glob::PatternError} = "{source}",
     Cache {source: bincode::Error} = "{source}",
+    Strategy {name: String} = "unsupported {} strategy",
 }
 
 /// Alias for a `Result` with the error type `hld::Error`.
@@ -193,13 +195,13 @@ pub fn hardlink_deduplicate(
     dry_run: bool,
     cache_path: &Path,
     clear_cache: bool,
-    symbolic: bool,
+    strategy: Strategy,
 ) -> Result<()> {
     let dups = find_file_duplicates(paths, caches, dry_run, cache_path, clear_cache)?;
     let mut dedup_size: u64 = 0;
     let mut dedup_files: usize = 0;
     for dup in dups {
-        dedup_size += file_hardlinks(&dup[0], &dup[1..], dry_run, symbolic)?;
+        dedup_size += file_hardlinks(&dup[0], &dup[1..], dry_run, strategy)?;
         dedup_files += dup.len() - 1;
     }
     info!(
@@ -213,7 +215,7 @@ fn file_hardlinks(
     path: &Path,
     hardlinks: &[&PathBuf],
     dry_run: bool,
-    symbolic: bool,
+    strategy: Strategy,
 ) -> Result<u64> {
     let metadata = fs::metadata(path).with_path(path)?;
     let inode = inos_m(&metadata);
@@ -222,20 +224,22 @@ fn file_hardlinks(
         if hinode != inode && hinode.0 == inode.0 {
             debug!(
                 "{} {} and {}",
-                if symbolic {
-                    "symlinking"
-                } else {
-                    "hardlinking"
+                match strategy {
+                    Strategy::SymLink => "symlinking",
+                    Strategy::HardLink => "hardlinking",
+                    Strategy::RefLink => "reflinking",
                 },
                 hardlink.display(),
                 path.display()
             );
             if !dry_run {
                 std::fs::remove_file(hardlink).with_path(hardlink)?;
-                if symbolic {
-                    std::os::unix::fs::symlink(path, hardlink).with_path(path)?;
-                } else {
-                    std::fs::hard_link(path, hardlink).with_path(path)?;
+                match strategy {
+                    Strategy::SymLink => {
+                        std::os::unix::fs::symlink(path, hardlink).with_path(path)?
+                    }
+                    Strategy::HardLink => std::fs::hard_link(path, hardlink).with_path(path)?,
+                    Strategy::RefLink => reflink::reflink(path, hardlink).with_path(path)?,
                 }
             }
         } else {
@@ -243,7 +247,11 @@ fn file_hardlinks(
                 "{} and {} are already {}",
                 hardlink.display(),
                 path.display(),
-                if symbolic { "symlinked" } else { "hardlinked" },
+                match strategy {
+                    Strategy::SymLink => "symlinked",
+                    Strategy::HardLink => "hardlinked",
+                    Strategy::RefLink => "reflinked",
+                },
             );
         }
     }
