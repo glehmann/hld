@@ -180,7 +180,7 @@ fn update_cache(
         debug!("saving updated cache with {} entries", live_cache.len());
         if !dry_run {
             let output_file = File::create(&cache_path).with_path(&cache_path)?;
-            bincode::serialize_into(&output_file, &live_cache)?;
+            bincode::serialize_into(io::BufWriter::new(&output_file), &live_cache)?;
         }
     }
 
