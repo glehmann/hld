@@ -114,6 +114,23 @@ you change the number of threads to run in parallel.
 
 For example, `hld -j1 "myproject/*"` forces `hld` to run single threaded.
 
+#### shell completion
+
+`hld` can generate the completion code for several shells (fish, zsh, bash, …).
+Just run it with the `--completion` option followed by the shell type, and save
+the produce code in the appropriate location. For example, for fish:
+
+```fish
+hld --completion fish > ~/.config/fish/completions/hld.fish
+```
+
+The completion is usually activated in the new shell instances, but may be
+activated by sourcing the file. Again for fish:
+
+```fish
+source ~/.config/fish/completions/hld.fish
+```
+
 Install
 -------
 
@@ -130,24 +147,6 @@ $ cargo install
 ...
 $ $HOME/.cargo/bin/hld --version
 hld 0.1.0
-```
-
-Shell completion
-----------------
-
-`hld` can generate the completion code for several shells (fish, zsh, bash, …).
-Just run it with the `--completion` option followed by the shell type, and save
-the produce code in the appropriate location. For example, for fish:
-
-```fish
-hld --completion fish > ~/.config/fish/completions/hld.fish
-```
-
-The completion is usually activated in the new shell instances, but may be
-activated by sourcing the file. Again for fish:
-
-```fish
-source ~/.config/fish/completions/hld.fish
 ```
 
 Building
