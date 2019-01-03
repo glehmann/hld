@@ -182,6 +182,16 @@ test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 
 from the repository root.
 
+Releasing
+---------
+
+In order to produce a small easy to download executable, just do a release
+build followed by:
+
+```
+$ strip target/release/hld
+$ upx --ultra-brute target/release/hld
+```
 
 TODO
 ----
