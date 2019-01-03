@@ -45,13 +45,14 @@ impl<T> ToPathIOErr<T> for io::Result<T> {
     }
 }
 
-type Digest = [u8; 32];
+const DIGEST_BYTES: usize = 32;
+type Digest = [u8; DIGEST_BYTES];
 
 /// compute the digest of a file
 fn file_digest(path: &Path) -> Result<Digest> {
     debug!("computing digest of {}", path.display());
     let mut file = fs::File::open(&path).with_path(&path)?;
-    let mut hasher = Blake2b::new(32);
+    let mut hasher = Blake2b::new(DIGEST_BYTES);
     io::copy(&mut file, &mut hasher).with_path(&path)?;
     let mut hash: Digest = Default::default();
     hash.copy_from_slice(hasher.finalize().as_bytes());
