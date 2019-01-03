@@ -31,7 +31,7 @@ pub struct Config {
     pub dry_run: bool,
 
     /// The linking strategy to use - either hardlink, symlink or reflink
-    #[structopt(short = "s", long = "strategy", default_value="hardlink")]
+    #[structopt(short = "s", long = "strategy", default_value = "hardlink")]
     pub strategy: Strategy,
 
     /// Parallelism level
