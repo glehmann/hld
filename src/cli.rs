@@ -1,4 +1,3 @@
-use log;
 use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::StructOpt;
@@ -77,7 +76,7 @@ pub enum Strategy {
 }
 
 impl FromStr for Strategy {
-    type Err = ::hld::Error;
+    type Err = crate::hld::Error;
     fn from_str(value: &str) -> Result<Strategy, Self::Err> {
         let value = value.to_lowercase();
         if value == "hardlink" {
@@ -87,7 +86,7 @@ impl FromStr for Strategy {
         } else if value == "reflink" {
             Ok(Strategy::RefLink)
         } else {
-            Err(::hld::Error::Strategy { name: value })
+            Err(crate::hld::Error::Strategy { name: value })
         }
     }
 }
