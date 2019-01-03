@@ -146,7 +146,7 @@ fn update_cache(
             .ok()
             .map_or_else(HashMap::new, |reader| {
                 debug!("reading cache");
-                bincode::deserialize_from(reader).unwrap_or_default()
+                bincode::deserialize_from(io::BufReader::new(reader)).unwrap_or_default()
             })
     };
     let original_cache_size = cache.len();
