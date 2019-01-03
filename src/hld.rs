@@ -1,6 +1,6 @@
+use crate::cli::Strategy;
 use bincode;
 use blake2_rfc::blake2b::Blake2b;
-use crate::cli::Strategy;
 use custom_error::custom_error;
 use fs2::FileExt;
 use rayon::prelude::*;
