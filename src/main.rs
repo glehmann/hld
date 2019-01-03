@@ -12,6 +12,7 @@ extern crate atty;
 extern crate bincode;
 extern crate blake2_rfc;
 extern crate custom_error;
+extern crate pretty_bytes;
 extern crate reflink;
 
 mod cli;

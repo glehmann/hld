@@ -206,9 +206,12 @@ pub fn hardlink_deduplicate(
         dedup_size += file_hardlinks(&dup[0], &dup[1..], dry_run, strategy)?;
         dedup_files += dup.len() - 1;
     }
+    debug!("{} bytes saved", dedup_size);
+    debug!("{} files deduplicated", dedup_files);
     info!(
-        "{} bytes saved in the deduplication of {} files",
-        dedup_size, dedup_files
+        "{} saved in the deduplication of {} files",
+        pretty_bytes::converter::convert(dedup_size as f64),
+        dedup_files
     );
     Ok(())
 }

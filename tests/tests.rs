@@ -19,7 +19,7 @@ fn test_empty_run() {
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(
-            "0 bytes saved in the deduplication of 0 files",
+            "0 B saved in the deduplication of 0 files",
         ));
 }
 
@@ -108,8 +108,8 @@ fn test_deduplication() {
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(format!(
-            "{} bytes saved in the deduplication of 1 files",
-            lorem_ipsum.len()
+            "{} saved in the deduplication of 1 files",
+            pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
 
     assert_eq!(inos(foo.path()), inos(bar.path()));
@@ -147,8 +147,8 @@ fn test_dryrun() {
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(format!(
-            "{} bytes saved in the deduplication of 1 files",
-            lorem_ipsum.len()
+            "{} saved in the deduplication of 1 files",
+            pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
 
     assert_ne!(inos(foo.path()), inos(bar.path()));
@@ -194,7 +194,7 @@ fn test_no_deduplication_different_files() {
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(
-            "0 bytes saved in the deduplication of 0 files",
+            "0 B saved in the deduplication of 0 files",
         ));
 
     assert_ne!(inos(foo.path()), inos(bar.path()));
@@ -217,7 +217,7 @@ fn test_no_deduplication_empty_files() {
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(
-            "0 bytes saved in the deduplication of 0 files",
+            "0 B saved in the deduplication of 0 files",
         ));
 
     assert_ne!(inos(foo.path()), inos(bar.path()));
@@ -396,8 +396,8 @@ fn test_recursive() {
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(format!(
-            "{} bytes saved in the deduplication of 1 files",
-            lorem_ipsum.len()
+            "{} saved in the deduplication of 1 files",
+            pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
 
     assert_eq!(inos(foo.path()), inos(bar.path()));
