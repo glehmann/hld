@@ -1,19 +1,7 @@
-extern crate structopt;
 #[macro_use]
 extern crate log;
-extern crate fs2;
-extern crate glob;
-extern crate rayon;
 #[macro_use]
 extern crate maplit;
-extern crate ansi_term;
-extern crate app_dirs;
-extern crate atty;
-extern crate bincode;
-extern crate blake2_rfc;
-extern crate custom_error;
-extern crate pretty_bytes;
-extern crate reflink;
 
 mod cli;
 mod cli_logger;
