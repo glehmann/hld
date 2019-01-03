@@ -1,7 +1,7 @@
 [package]
 name = "hld"
 version = "0.1.0"
-authors = ["Gaëtan Lehmann <gaetan.lehmann@gmail.com>"]
+authors = ["Gaëtan Lehmann <gaetan.lehmann@gmail.com>", "Sylvain Joubert <joubert.sy@gmail.com>"]
 edition = "2018"
 
 [dependencies]
