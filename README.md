@@ -41,14 +41,18 @@ Usage
 candidate files for deduplication. They support the `**` notation to traverse
 any number of directories. For example:
 
-* `hld target/*.jar` deduplicates all the `jar` files directly in the `target`
+* `hld "target/*.jar"` deduplicates all the `jar` files directly in the `target`
   directory;
-* `hld target/**/*.jar` deduplicates all the `jar` files in the `target`
+* `hld "target/**/*.jar"` deduplicates all the `jar` files in the `target`
   directory and its subdirectories.
 
 Several globs may be passed on the command line in order to work with
 several directories and/or several file name patterns. For example:
-`hld target/*.jar images/**/*.png`.
+`hld "target/*.jar" "images/**/*.png"`.
+
+Note: the quotes are important to avoid the glob expansion by the shell.
+In case of large directories, the shell may not be able to pass all the
+files contained there.
 
 #### caching
 
@@ -58,10 +62,14 @@ value is saved for a latter reuse. They must be used on files that are
 guarenteed to *not* change. Cached globs are passed with a `--cache`,
 or `-c` option.
 
-For example: `hld target/* --cache stable/*` will deduplicate
+For example: `hld "target/*" --cache "stable/*"` will deduplicate
 all the files in both `target` and `stable`, and will also cache the
 digests of the files in `stable`. The cached digests of `stable` will
 then be reused at a latter `hld` call, in order to speed up the execution.
+
+The quotes are very important in this case: without them, the globs would
+be expanded by the shell, and only the first file of the set would be
+cached.
 
 The cache path may be specified with the `--cache-path` option or `-C`,
 in order to deal with several sets of caches, depending on the execution
@@ -69,14 +77,42 @@ context.
 
 The cache may be cleared with the option `--clear-cache`.
 
+#### recursive
+
+The `--recursive` or `-r` option simplify the command line usage when working
+with all the files in some directories. For example, the two following
+commands are strictly equivalents:
+
+```fish
+hld -r -c ~/.m2 myproject
+```
+
+```fish
+hld -c "$HOME/.m2/**/*" "myproject/**/*"
+```
+
 #### dry run
 
 Using the option `--dry-run` or `-n` prevents `hld` to modify anytring on
 the disk, cache included.
 
-For example: `hld target/* --cache stable/* --dry-run` only show how many
+For example: `hld "target/*" --cache "stable/*" --dry-run` only show how many
 files would be deduplicated and how much space would be saved, but actually
 does nothing.
+
+#### log level
+
+The amount of output displayed by `hld` can be controlled by the `--log-level`
+or `-l` option. It accepts the following values, from the most verbose to
+the most quiet: `trace`, `debug`, `info` (the default level), `warn`, `error`.
+
+#### parallelism
+
+By default `hld` maximize the number of cores it is working on, in order to
+complete its task as fast of possible. The `--parallel` or `-j` options let
+you change the number of threads to run in parallel.
+
+For example, `hld -j1 "myproject/*"` forces `hld` to run single threaded.
 
 Install
 -------
