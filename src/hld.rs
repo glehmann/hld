@@ -234,6 +234,7 @@ fn file_hardlinks(
                 hardlink.display(),
                 path.display()
             );
+            let dest_metadata = fs::metadata(hardlink).with_path(hardlink)?;
             if !dry_run {
                 std::fs::remove_file(hardlink).with_path(hardlink)?;
                 match strategy {
@@ -243,6 +244,7 @@ fn file_hardlinks(
                     Strategy::HardLink => std::fs::hard_link(path, hardlink).with_path(path)?,
                     Strategy::RefLink => reflink::reflink(path, hardlink).with_path(path)?,
                 }
+                restore_file_attributes(hardlink, &dest_metadata)?;
             }
         } else {
             debug!(
@@ -254,6 +256,14 @@ fn file_hardlinks(
         }
     }
     Ok(metadata.len() * hardlinks.len() as u64)
+}
+
+fn restore_file_attributes(path: &Path, metadata: &fs::Metadata) -> Result<()> {
+    let atime = filetime::FileTime::from_last_access_time(metadata);
+    let mtime = filetime::FileTime::from_last_modification_time(metadata);
+    filetime::set_symlink_file_times(path, atime, mtime).with_path(path)?;
+    fs::set_permissions(path, metadata.permissions()).with_path(path)?;
+    Ok(())
 }
 
 pub fn glob_to_files(paths: &[String]) -> Result<Vec<PathBuf>> {
