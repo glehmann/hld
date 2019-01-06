@@ -92,12 +92,9 @@ fn test_invalid_glob() {
         .assert()
         .failure()
         .stdout(predicate::str::is_empty())
-        .stderr(
-            predicate::str::is_match(
-                r"^error: foua/\[etsin: Pattern syntax error near position 5: invalid range pattern",
-            )
-            .unwrap(),
-        );
+        .stderr(predicate::str::contains(
+            "error: foua/[etsin: Pattern syntax error near position 5: invalid range pattern",
+        ));
 }
 
 #[test]
