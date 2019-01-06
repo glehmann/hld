@@ -48,14 +48,14 @@ impl<T> ToPathIOErr<T> for io::Result<T> {
 }
 
 trait ToGlobErr<T> {
-    fn with_glob(self: Self, path: &String) -> Result<T>;
+    fn with_glob(self: Self, path: &str) -> Result<T>;
 }
 
 impl<T> ToGlobErr<T> for std::result::Result<T, glob::PatternError> {
-    fn with_glob(self: Self, glob: &String) -> Result<T> {
+    fn with_glob(self: Self, glob: &str) -> Result<T> {
         self.map_err(|e| Error::Glob {
             source: e,
-            glob: glob.clone(),
+            glob: glob.to_owned(),
         })
     }
 }
