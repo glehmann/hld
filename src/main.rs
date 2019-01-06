@@ -23,8 +23,7 @@ fn run() -> hld::Result<()> {
         debug!("using {} threads at most", parallel);
         rayon::ThreadPoolBuilder::new()
             .num_threads(parallel)
-            .build_global()
-            .unwrap();
+            .build_global()?;
     }
 
     let cache_path = args.cache_path();

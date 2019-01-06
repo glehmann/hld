@@ -28,6 +28,7 @@ custom_error! {pub Error
     Cache {source: bincode::Error} = "{source}",
     Strategy {name: String} = "unsupported {} strategy",
     Logger {source: log::SetLoggerError} = "{source}",
+    ThreadPool {source: rayon::ThreadPoolBuildError} = "{source}",
 }
 
 /// Alias for a `Result` with the error type `hld::Error`.
