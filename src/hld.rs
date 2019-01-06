@@ -231,8 +231,8 @@ fn file_hardlinks(
             debug!(
                 "{}ing {} and {}",
                 strategy.to_string(),
+                path.display(),
                 hardlink.display(),
-                path.display()
             );
             let dest_metadata = fs::metadata(hardlink).with_path(hardlink)?;
             if !dry_run {
@@ -249,8 +249,8 @@ fn file_hardlinks(
         } else {
             debug!(
                 "{} and {} are already {}ed",
-                hardlink.display(),
                 path.display(),
+                hardlink.display(),
                 strategy.to_string(),
             );
         }
