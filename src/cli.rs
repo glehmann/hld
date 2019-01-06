@@ -91,14 +91,13 @@ impl FromStr for Strategy {
     }
 }
 
-impl ToString for Strategy {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for Strategy {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Strategy::HardLink => "hardlink",
-            Strategy::SymLink => "symlink",
-            Strategy::RefLink => "reflink",
+            Strategy::HardLink => write!(f, "hardlink"),
+            Strategy::SymLink => write!(f, "symlink"),
+            Strategy::RefLink => write!(f, "reflink"),
         }
-        .to_owned()
     }
 }
 
