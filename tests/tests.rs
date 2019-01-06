@@ -85,6 +85,22 @@ fn test_bad_option() {
 }
 
 #[test]
+fn test_invalid_glob() {
+    Command::main_binary()
+        .unwrap()
+        .arg("foua/[etsin")
+        .assert()
+        .failure()
+        .stdout(predicate::str::is_empty())
+        .stderr(
+            predicate::str::is_match(
+                r"^error: foua/\[etsin: Pattern syntax error near position 5: invalid range pattern",
+            )
+            .unwrap(),
+        );
+}
+
+#[test]
 fn test_deduplication() {
     let lorem_ipsum = lipsum(100);
     // set up the test dir

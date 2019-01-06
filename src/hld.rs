@@ -24,9 +24,10 @@ custom_error! {pub Error
     // no need for this one for now, and not having it ensures we get a compilation error
     // when an io::Error is not properly converted to Error::PathIo
     // Io {source: io::Error} = "{source}",
-    Glob {source: glob::PatternError} = "{source}",
+    Glob {source: glob::PatternError, glob: String} = "{glob}: {source}",
     Cache {source: bincode::Error} = "{source}",
     Strategy {name: String} = "unsupported {} strategy",
+    Logger {source: log::SetLoggerError} = "{source}",
 }
 
 /// Alias for a `Result` with the error type `hld::Error`.
@@ -41,6 +42,19 @@ impl<T> ToPathIOErr<T> for io::Result<T> {
         self.map_err(|e| Error::PathIo {
             source: e,
             path: path.to_path_buf(),
+        })
+    }
+}
+
+trait ToGlobErr<T> {
+    fn with_glob(self: Self, path: &String) -> Result<T>;
+}
+
+impl<T> ToGlobErr<T> for std::result::Result<T, glob::PatternError> {
+    fn with_glob(self: Self, glob: &String) -> Result<T> {
+        self.map_err(|e| Error::Glob {
+            source: e,
+            glob: glob.clone(),
         })
     }
 }
@@ -266,9 +280,13 @@ fn restore_file_attributes(path: &Path, metadata: &fs::Metadata) -> Result<()> {
     Ok(())
 }
 
-pub fn glob_to_files(paths: &[String]) -> Result<Vec<PathBuf>> {
-    Ok(paths
-        .into_iter()
+pub fn glob_to_files(globs: &[String]) -> Result<Vec<PathBuf>> {
+    globs
+        .iter()
+        .map(|g| Ok(glob::glob(g).with_glob(g)?))
+        .collect::<Result<Vec<glob::Paths>>>()?;
+    Ok(globs
+        .iter()
         .flat_map(|g| glob::glob(g).unwrap().filter_map(|f| f.ok()))
         .map(|f| f.to_path_buf())
         .filter(|f| f.metadata().unwrap().file_type().is_file())

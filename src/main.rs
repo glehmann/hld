@@ -10,9 +10,9 @@ mod hld;
 use std::io;
 use structopt::StructOpt;
 
-fn main() {
+fn run() -> hld::Result<()> {
     let args = cli::Config::from_args();
-    cli_logger::init(args.log_level).unwrap();
+    cli_logger::init(args.log_level)?;
 
     if let Some(shell) = args.completion {
         cli::Config::clap().gen_completions_to("hld", shell, &mut io::stdout());
@@ -38,18 +38,23 @@ fn main() {
     } else {
         args.caches
     };
-    let files = hld::glob_to_files(&file_globs).unwrap();
-    let caches = hld::glob_to_files(&cache_globs).unwrap();
+    let files = hld::glob_to_files(&file_globs)?;
+    let caches = hld::glob_to_files(&cache_globs)?;
     trace!("files: {:?}", files);
     trace!("caches: {:?}", caches);
-    if let Err(err) = hld::hardlink_deduplicate(
+    hld::hardlink_deduplicate(
         &files,
         &caches,
         args.dry_run,
         &cache_path,
         args.clear_cache,
         args.strategy,
-    ) {
+    )?;
+    Ok(())
+}
+
+fn main() {
+    if let Err(err) = run() {
         error!("{}", err);
         std::process::exit(1);
     }
