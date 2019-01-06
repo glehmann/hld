@@ -82,8 +82,8 @@ fn find_file_duplicates<'a>(
     let cache = update_cache(caches, dry_run, cache_path, clear_cache)?;
 
     let mut all_paths: Vec<&'a PathBuf> = vec![];
-    all_paths.extend(paths.iter());
     all_paths.extend(caches.iter());
+    all_paths.extend(paths.iter());
 
     // get some metadata and filter out the empty files
     let mut path_inos: Vec<(&'a PathBuf, (u64, u64))> = Vec::new();
