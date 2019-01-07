@@ -5,6 +5,7 @@ use custom_error::custom_error;
 use fs2::FileExt;
 use rayon::prelude::*;
 use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::fs;
 use std::fs::File;
 use std::io;
@@ -283,16 +284,20 @@ fn restore_file_attributes(path: &Path, metadata: &fs::Metadata) -> Result<()> {
 }
 
 pub fn glob_to_files(globs: &[String]) -> Result<Vec<PathBuf>> {
-    let mut res = Vec::new();
-    for glob in globs {
-        for path in glob::glob(glob).with_glob(glob)? {
-            let path = path?;
-            if path.metadata().with_path(&path)?.file_type().is_file() {
-                res.push(path.to_path_buf());
+    let res = globs
+        .par_iter()
+        .map(|glob| {
+            let mut res = VecDeque::new();
+            for path in glob::glob(glob).with_glob(glob)? {
+                let path = path?;
+                if path.metadata().with_path(&path)?.file_type().is_file() {
+                    res.push_back(path.to_path_buf());
+                }
             }
-        }
-    }
-    Ok(res)
+            Ok(res)
+        })
+        .collect::<Result<Vec<VecDeque<PathBuf>>>>()?;
+    Ok(res.iter().cloned().flat_map(|v| v).collect())
 }
 
 /// returns the inodes of the partition and of the file
