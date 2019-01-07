@@ -1,12 +1,12 @@
+mod common;
+
 use assert_cmd::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
 
 #[test]
 fn help() {
-    Command::main_binary()
-        .unwrap()
-        .arg("--help")
+    hld!("--help")
         .assert()
         .success()
         .stdout(
@@ -22,9 +22,7 @@ fn help() {
 
 #[test]
 fn version() {
-    Command::main_binary()
-        .unwrap()
-        .arg("--version")
+    hld!("--version")
         .assert()
         .success()
         .stdout(predicate::str::is_match(r"^hld \d+\.\d+\.\d+\n$").unwrap())
@@ -33,9 +31,7 @@ fn version() {
 
 #[test]
 fn bad_option() {
-    Command::main_binary()
-        .unwrap()
-        .arg("--foo")
+    hld!("--foo")
         .assert()
         .failure()
         .stdout(predicate::str::is_empty())
@@ -48,9 +44,7 @@ fn bad_option() {
 
 #[test]
 fn log_level_error() {
-    Command::main_binary()
-        .unwrap()
-        .args(&["--log-level", "error"])
+    hld!("--log-level", "error")
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
@@ -59,9 +53,7 @@ fn log_level_error() {
 
 #[test]
 fn log_level_info() {
-    Command::main_binary()
-        .unwrap()
-        .args(&["--log-level", "info"])
+    hld!("--log-level", "info")
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
@@ -75,9 +67,7 @@ fn log_level_info() {
 
 #[test]
 fn log_level_debug() {
-    Command::main_binary()
-        .unwrap()
-        .args(&["--log-level", "debug"])
+    hld!("--log-level", "debug")
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
@@ -91,9 +81,7 @@ fn log_level_debug() {
 
 #[test]
 fn log_level_trace() {
-    Command::main_binary()
-        .unwrap()
-        .args(&["--log-level", "trace"])
+    hld!("--log-level", "trace")
         .assert()
         .success()
         .stdout(predicate::str::is_empty())

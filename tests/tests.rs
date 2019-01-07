@@ -1,6 +1,6 @@
 mod common;
 
-use crate::common::TestPathChild;
+use crate::common::*;
 use assert_cmd::prelude::*;
 use assert_fs::prelude::*;
 use lipsum::lipsum;
@@ -9,11 +9,11 @@ use std::fs;
 use std::fs::Permissions;
 use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
+use std::string::ToString;
 
 #[test]
 fn empty_run() {
-    Command::main_binary()
-        .unwrap()
+    hld!()
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
@@ -24,9 +24,7 @@ fn empty_run() {
 
 #[test]
 fn parallel() {
-    Command::main_binary()
-        .unwrap()
-        .args(&["--log-level", "debug", "--parallel", "5"])
+    hld!("--log-level", "debug", "--parallel", "5")
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
@@ -35,9 +33,7 @@ fn parallel() {
 
 #[test]
 fn invalid_glob() {
-    Command::main_binary()
-        .unwrap()
-        .arg("foua/[etsin")
+    hld!("foua/[etsin")
         .assert()
         .failure()
         .stdout(predicate::str::is_empty())
@@ -58,9 +54,7 @@ fn deduplication() {
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
-    Command::main_binary()
-        .unwrap()
-        .arg(tmp.child("*.txt").path())
+    hld!(tmp.child("*.txt"))
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
@@ -88,25 +82,23 @@ fn dryrun() {
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
     cache_path.assert(predicate::path::missing());
 
-    Command::main_binary()
-        .unwrap()
-        .args(&[
-            "--log-level",
-            "debug",
-            "--cache",
-            &foo.path().display().to_string(),
-            "--cache-path",
-            &cache_path.path().display().to_string(),
-            &bar.path().display().to_string(),
-            "--dry-run",
-        ])
-        .assert()
-        .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains(format!(
-            "{} saved in the deduplication of 1 files",
-            pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
-        )));
+    hld!(
+        "--log-level",
+        "debug",
+        "--cache",
+        foo,
+        "--cache-path",
+        cache_path,
+        bar,
+        "--dry-run"
+    )
+    .assert()
+    .success()
+    .stdout(predicate::str::is_empty())
+    .stderr(predicate::str::contains(format!(
+        "{} saved in the deduplication of 1 files",
+        pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
+    )));
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
     cache_path.assert(predicate::path::missing());
@@ -122,9 +114,7 @@ fn unreadable_file() {
 
     fs::set_permissions(foo.path(), Permissions::from_mode(0o000)).unwrap();
 
-    Command::main_binary()
-        .unwrap()
-        .arg(foo.path())
+    hld!(foo)
         .assert()
         .failure()
         .stdout(predicate::str::is_empty())
@@ -144,9 +134,7 @@ fn no_deduplication_different_files() {
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
-    Command::main_binary()
-        .unwrap()
-        .arg(tmp.child("*.txt").path())
+    hld!(tmp.child("*.txt"))
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
@@ -167,9 +155,7 @@ fn no_deduplication_empty_files() {
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
-    Command::main_binary()
-        .unwrap()
-        .arg(tmp.child("*.txt").path())
+    hld!(tmp.child("*.txt"))
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
@@ -197,63 +183,59 @@ fn deduplication_with_cache() {
     cache_path.assert(predicate::path::missing());
 
     // first warm up the cache
-    Command::main_binary()
-        .unwrap()
-        .args(&[
-            "--log-level",
-            "debug",
-            "--cache",
-            &tmp.child("foo.txt").path().display().to_string(),
-            "--cache-path",
-            &cache_path.path().display().to_string(),
-        ])
-        .assert()
-        .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(
-            predicate::str::contains(format!(
-                "debug: computing digest of {}",
-                foo.path().display()
-            ))
-            .and(predicate::str::contains("debug: saving updated cache")),
-        );
+    hld!(
+        "--log-level",
+        "debug",
+        "--cache",
+        foo,
+        "--cache-path",
+        cache_path
+    )
+    .assert()
+    .success()
+    .stdout(predicate::str::is_empty())
+    .stderr(
+        predicate::str::contains(format!(
+            "debug: computing digest of {}",
+            foo.path().display()
+        ))
+        .and(predicate::str::contains("debug: saving updated cache")),
+    );
 
     cache_path.assert(predicate::path::exists());
 
     // then deduplicate
-    Command::main_binary()
-        .unwrap()
-        .args(&[
-            "--log-level",
-            "debug",
-            "--cache",
-            &foo.path().display().to_string(),
-            "--cache-path",
-            &cache_path.path().display().to_string(),
-            &bar.path().display().to_string(),
-        ])
-        .assert()
-        .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(
+    hld!(
+        "--log-level",
+        "debug",
+        "--cache",
+        foo,
+        "--cache-path",
+        cache_path,
+        bar
+    )
+    .assert()
+    .success()
+    .stdout(predicate::str::is_empty())
+    .stderr(
+        predicate::str::contains(format!(
+            "debug: hardlinking {} and {}",
+            foo.path().display(),
+            bar.path().display()
+        ))
+        .and(predicate::str::contains("debug: saving updated cache").not())
+        .and(
             predicate::str::contains(format!(
-                "debug: hardlinking {} and {}",
-                foo.path().display(),
-                bar.path().display()
-            ))
-            .and(predicate::str::contains("debug: saving updated cache").not())
-            .and(
-                predicate::str::contains(format!(
-                    "debug: computing digest of {}",
-                    foo.path().display()
-                ))
-                .not(),
-            )
-            .and(predicate::str::contains(format!(
                 "debug: computing digest of {}",
-                bar.path().display()
-            ))),
-        );
+                foo.path().display()
+            ))
+            .not(),
+        )
+        .and(predicate::str::contains(format!(
+            "debug: computing digest of {}",
+            bar.path().display()
+        ))),
+    );
 
     assert_eq!(common::inos(foo.path()), common::inos(bar.path()));
 }
@@ -272,51 +254,47 @@ fn clear_cache() {
     cache_path.assert(predicate::path::missing());
 
     // first warm up the cache
-    Command::main_binary()
-        .unwrap()
-        .args(&[
-            "--log-level",
-            "debug",
-            "--cache",
-            &tmp.child("foo.txt").path().display().to_string(),
-            "--cache-path",
-            &cache_path.path().display().to_string(),
-        ])
-        .assert()
-        .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(
-            predicate::str::contains(format!(
-                "debug: computing digest of {}",
-                foo.path().display()
-            ))
-            .and(predicate::str::contains("debug: saving updated cache")),
-        );
+    hld!(
+        "--log-level",
+        "debug",
+        "--cache",
+        tmp.child("*"),
+        "--cache-path",
+        cache_path
+    )
+    .assert()
+    .success()
+    .stdout(predicate::str::is_empty())
+    .stderr(
+        predicate::str::contains(format!(
+            "debug: computing digest of {}",
+            foo.path().display()
+        ))
+        .and(predicate::str::contains("debug: saving updated cache")),
+    );
 
     cache_path.assert(predicate::path::exists());
 
     // check that the digest is recomputed with --clear-cache
-    Command::main_binary()
-        .unwrap()
-        .args(&[
-            "--log-level",
-            "debug",
-            "--cache",
-            &tmp.child("foo.txt").path().display().to_string(),
-            "--cache-path",
-            &cache_path.path().display().to_string(),
-            "--clear-cache",
-        ])
-        .assert()
-        .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(
-            predicate::str::contains(format!(
-                "debug: computing digest of {}",
-                foo.path().display()
-            ))
-            .and(predicate::str::contains("debug: saving updated cache")),
-        );
+    hld!(
+        "--log-level",
+        "debug",
+        "--cache",
+        foo,
+        "--cache-path",
+        cache_path,
+        "--clear-cache"
+    )
+    .assert()
+    .success()
+    .stdout(predicate::str::is_empty())
+    .stderr(
+        predicate::str::contains(format!(
+            "debug: computing digest of {}",
+            foo.path().display()
+        ))
+        .and(predicate::str::contains("debug: saving updated cache")),
+    );
 }
 
 #[test]
@@ -333,9 +311,7 @@ fn recursive() {
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
-    Command::main_binary()
-        .unwrap()
-        .args(&["--recursive", &tmp.path().display().to_string()])
+    hld!("--recursive", tmp)
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
@@ -363,10 +339,7 @@ fn symlinking() {
     assert!(!is_symlink.eval(foo.path()));
     assert!(!is_symlink.eval(bar.path()));
 
-    Command::main_binary()
-        .unwrap()
-        .arg(tmp.child("*.txt").path())
-        .args(&["--strategy", "symlink"])
+    hld!(tmp.child("*.txt"), "--strategy", "symlink")
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
