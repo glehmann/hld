@@ -1,7 +1,11 @@
+mod common;
+
+use crate::common::TestPathChild;
 use assert_cmd::prelude::*;
 use assert_fs::prelude::*;
 use lipsum::lipsum;
 use predicates::prelude::*;
+use std::fs;
 use std::fs::Permissions;
 use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
@@ -107,7 +111,7 @@ fn test_deduplication() {
     foo.write_str(&lorem_ipsum).unwrap();
     bar.write_str(&lorem_ipsum).unwrap();
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
     Command::main_binary()
         .unwrap()
@@ -120,7 +124,7 @@ fn test_deduplication() {
             pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
 
-    assert_eq!(inos(foo.path()), inos(bar.path()));
+    assert_eq!(common::inos(foo.path()), common::inos(bar.path()));
 }
 
 #[test]
@@ -136,7 +140,7 @@ fn test_dryrun() {
     let cache_dir = assert_fs::TempDir::new().unwrap();
     let cache_path = cache_dir.child("digests");
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
     cache_path.assert(predicate::path::missing());
 
     Command::main_binary()
@@ -159,7 +163,7 @@ fn test_dryrun() {
             pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
     cache_path.assert(predicate::path::missing());
 }
 
@@ -193,7 +197,7 @@ fn test_no_deduplication_different_files() {
     foo.write_str(&lipsum(100)).unwrap();
     bar.write_str(&lipsum(101)).unwrap();
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
     Command::main_binary()
         .unwrap()
@@ -205,7 +209,7 @@ fn test_no_deduplication_different_files() {
             "0 B saved in the deduplication of 0 files",
         ));
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 }
 
 #[test]
@@ -216,7 +220,7 @@ fn test_no_deduplication_empty_files() {
     foo.touch().unwrap();
     bar.touch().unwrap();
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
     Command::main_binary()
         .unwrap()
@@ -228,7 +232,7 @@ fn test_no_deduplication_empty_files() {
             "0 B saved in the deduplication of 0 files",
         ));
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 }
 
 #[test]
@@ -244,7 +248,7 @@ fn test_deduplication_with_cache() {
     let cache_dir = assert_fs::TempDir::new().unwrap();
     let cache_path = cache_dir.child("digests");
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
     cache_path.assert(predicate::path::missing());
 
     // first warm up the cache
@@ -306,7 +310,7 @@ fn test_deduplication_with_cache() {
             ))),
         );
 
-    assert_eq!(inos(foo.path()), inos(bar.path()));
+    assert_eq!(common::inos(foo.path()), common::inos(bar.path()));
 }
 
 #[test]
@@ -395,7 +399,7 @@ fn test_recursive() {
     foo.write_str(&lorem_ipsum).unwrap();
     bar.write_str(&lorem_ipsum).unwrap();
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
     Command::main_binary()
         .unwrap()
@@ -408,7 +412,7 @@ fn test_recursive() {
             pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
 
-    assert_eq!(inos(foo.path()), inos(bar.path()));
+    assert_eq!(common::inos(foo.path()), common::inos(bar.path()));
 }
 
 #[test]
@@ -421,9 +425,9 @@ fn test_symlinking() {
     foo.write_str(&lorem_ipsum).unwrap();
     bar.write_str(&lorem_ipsum).unwrap();
 
-    assert_ne!(inos(foo.path()), inos(bar.path()));
-    assert!(!is_symlink(foo.path()));
-    assert!(!is_symlink(bar.path()));
+    assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
+    assert!(!common::is_symlink(foo.path()));
+    assert!(!common::is_symlink(bar.path()));
 
     Command::main_binary()
         .unwrap()
@@ -437,48 +441,10 @@ fn test_symlinking() {
             pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
 
-    assert_eq!(inos(foo.path()), inos(bar.path()));
-    assert!(is_symlink(foo.path()) ^ is_symlink(bar.path()));
+    assert_eq!(common::inos(foo.path()), common::inos(bar.path()));
+    assert!(common::is_symlink(foo.path()) ^ common::is_symlink(bar.path()));
     assert_eq!(
         fs::read_link(foo.path()).unwrap_or(foo.path().to_path_buf()),
         fs::read_link(bar.path()).unwrap_or(bar.path().to_path_buf())
     );
-}
-
-// utility functions from here
-
-use std::fs;
-use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
-use std::os::unix::fs::MetadataExt;
-use std::path::Path;
-
-pub trait TestPathChild {
-    fn child<P>(&self, path: P) -> assert_fs::fixture::ChildPath
-    where
-        P: AsRef<std::path::Path>;
-    fn mkdir_all(&self) -> std::io::Result<()>;
-}
-
-impl TestPathChild for assert_fs::fixture::ChildPath {
-    fn child<P>(&self, path: P) -> assert_fs::fixture::ChildPath
-    where
-        P: AsRef<std::path::Path>,
-    {
-        assert_fs::fixture::ChildPath::new(self.path().join(path))
-    }
-    fn mkdir_all(&self) -> std::io::Result<()> {
-        std::fs::create_dir_all(self.path())
-    }
-}
-
-/// returns the inodes of the partition and of the file
-fn inos(path: &Path) -> (u64, u64) {
-    let metadata = fs::metadata(path).unwrap();
-    (metadata.st_dev(), metadata.ino())
-}
-
-/// test if a path is a symlink
-fn is_symlink(path: &Path) -> bool {
-    let symlink_metadata = fs::symlink_metadata(path).unwrap();
-    symlink_metadata.file_type().is_symlink()
 }
