@@ -3,7 +3,7 @@ use predicates::prelude::*;
 use std::process::Command;
 
 #[test]
-fn test_help() {
+fn help() {
     Command::main_binary()
         .unwrap()
         .arg("--help")
@@ -21,7 +21,7 @@ fn test_help() {
 }
 
 #[test]
-fn test_version() {
+fn version() {
     Command::main_binary()
         .unwrap()
         .arg("--version")
@@ -32,7 +32,7 @@ fn test_version() {
 }
 
 #[test]
-fn test_bad_option() {
+fn bad_option() {
     Command::main_binary()
         .unwrap()
         .arg("--foo")
@@ -47,7 +47,7 @@ fn test_bad_option() {
 }
 
 #[test]
-fn test_log_level() {
+fn log_level() {
     Command::main_binary()
         .unwrap()
         .args(&["--log-level", "debug"])
@@ -58,7 +58,7 @@ fn test_log_level() {
 }
 
 #[test]
-fn test_completion() {
+fn completion() {
     for shell in &["bash", "fish", "zsh"] {
         Command::main_binary()
             .unwrap()

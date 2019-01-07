@@ -11,7 +11,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
 
 #[test]
-fn test_empty_run() {
+fn empty_run() {
     Command::main_binary()
         .unwrap()
         .assert()
@@ -23,7 +23,7 @@ fn test_empty_run() {
 }
 
 #[test]
-fn test_parallel() {
+fn parallel() {
     Command::main_binary()
         .unwrap()
         .args(&["--log-level", "debug", "--parallel", "5"])
@@ -34,7 +34,7 @@ fn test_parallel() {
 }
 
 #[test]
-fn test_invalid_glob() {
+fn invalid_glob() {
     Command::main_binary()
         .unwrap()
         .arg("foua/[etsin")
@@ -47,7 +47,7 @@ fn test_invalid_glob() {
 }
 
 #[test]
-fn test_deduplication() {
+fn deduplication() {
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
@@ -73,7 +73,7 @@ fn test_deduplication() {
 }
 
 #[test]
-fn test_dryrun() {
+fn dryrun() {
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
@@ -113,7 +113,7 @@ fn test_dryrun() {
 }
 
 #[test]
-fn test_unreadable_file() {
+fn unreadable_file() {
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
@@ -135,7 +135,7 @@ fn test_unreadable_file() {
 }
 
 #[test]
-fn test_no_deduplication_different_files() {
+fn no_deduplication_different_files() {
     let tmp = assert_fs::TempDir::new().unwrap();
     let foo = tmp.child("foo.txt");
     let bar = tmp.child("bar.txt");
@@ -158,7 +158,7 @@ fn test_no_deduplication_different_files() {
 }
 
 #[test]
-fn test_no_deduplication_empty_files() {
+fn no_deduplication_empty_files() {
     let tmp = assert_fs::TempDir::new().unwrap();
     let foo = tmp.child("foo.txt");
     let bar = tmp.child("bar.txt");
@@ -181,7 +181,7 @@ fn test_no_deduplication_empty_files() {
 }
 
 #[test]
-fn test_deduplication_with_cache() {
+fn deduplication_with_cache() {
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
@@ -259,7 +259,7 @@ fn test_deduplication_with_cache() {
 }
 
 #[test]
-fn test_clear_cache() {
+fn clear_cache() {
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
@@ -320,7 +320,7 @@ fn test_clear_cache() {
 }
 
 #[test]
-fn test_recursive() {
+fn recursive() {
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
@@ -348,7 +348,7 @@ fn test_recursive() {
 }
 
 #[test]
-fn test_symlinking() {
+fn symlinking() {
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
