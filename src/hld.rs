@@ -245,7 +245,7 @@ pub fn glob_to_files(globs: &[String]) -> Result<Vec<PathBuf>> {
             for path in glob::glob(glob).with_glob(glob)? {
                 let path = path?;
                 if path.metadata().with_path(&path)?.file_type().is_file() {
-                    res.push_back(path.to_path_buf());
+                    res.push_back(path);
                 }
             }
             Ok(res)
