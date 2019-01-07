@@ -7,7 +7,6 @@ use std::process::Command;
 #[test]
 fn help() {
     hld!("--help")
-        .assert()
         .success()
         .stdout(
             predicate::str::contains("Hard Link Deduplicator").and(
@@ -23,7 +22,6 @@ fn help() {
 #[test]
 fn version() {
     hld!("--version")
-        .assert()
         .success()
         .stdout(predicate::str::is_match(r"^hld \d+\.\d+\.\d+\n$").unwrap())
         .stderr(predicate::str::is_empty());
@@ -32,7 +30,6 @@ fn version() {
 #[test]
 fn bad_option() {
     hld!("--foo")
-        .assert()
         .failure()
         .stdout(predicate::str::is_empty())
         .stderr(
@@ -45,7 +42,6 @@ fn bad_option() {
 #[test]
 fn log_level_error() {
     hld!("--log-level", "error")
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::is_empty());
@@ -54,7 +50,6 @@ fn log_level_error() {
 #[test]
 fn log_level_info() {
     hld!("--log-level", "info")
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(
@@ -68,7 +63,6 @@ fn log_level_info() {
 #[test]
 fn log_level_debug() {
     hld!("--log-level", "debug")
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(
@@ -82,7 +76,6 @@ fn log_level_debug() {
 #[test]
 fn log_level_trace() {
     hld!("--log-level", "trace")
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(
@@ -96,10 +89,7 @@ fn log_level_trace() {
 #[test]
 fn completion() {
     for shell in &["bash", "fish", "zsh"] {
-        Command::main_binary()
-            .unwrap()
-            .args(&["--completion", shell])
-            .assert()
+        hld!("--completion", shell)
             .success()
             .stdout(predicate::str::is_empty().not())
             .stderr(predicate::str::is_empty());

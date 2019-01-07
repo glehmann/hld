@@ -14,7 +14,6 @@ use std::string::ToString;
 #[test]
 fn empty_run() {
     hld!()
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(
@@ -25,7 +24,6 @@ fn empty_run() {
 #[test]
 fn parallel() {
     hld!("--log-level", "debug", "--parallel", "5")
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains("debug: using 5 threads at most"));
@@ -34,7 +32,6 @@ fn parallel() {
 #[test]
 fn invalid_glob() {
     hld!("foua/[etsin")
-        .assert()
         .failure()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(
@@ -55,7 +52,6 @@ fn deduplication() {
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
     hld!(tmp.child("*.txt"))
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(format!(
@@ -92,7 +88,6 @@ fn dryrun() {
         bar,
         "--dry-run"
     )
-    .assert()
     .success()
     .stdout(predicate::str::is_empty())
     .stderr(predicate::str::contains(format!(
@@ -115,7 +110,6 @@ fn unreadable_file() {
     fs::set_permissions(foo.path(), Permissions::from_mode(0o000)).unwrap();
 
     hld!(foo)
-        .assert()
         .failure()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(format!(
@@ -135,7 +129,6 @@ fn no_deduplication_different_files() {
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
     hld!(tmp.child("*.txt"))
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(
@@ -156,7 +149,6 @@ fn no_deduplication_empty_files() {
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
     hld!(tmp.child("*.txt"))
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(
@@ -191,7 +183,6 @@ fn deduplication_with_cache() {
         "--cache-path",
         cache_path
     )
-    .assert()
     .success()
     .stdout(predicate::str::is_empty())
     .stderr(
@@ -214,7 +205,6 @@ fn deduplication_with_cache() {
         cache_path,
         bar
     )
-    .assert()
     .success()
     .stdout(predicate::str::is_empty())
     .stderr(
@@ -262,7 +252,6 @@ fn clear_cache() {
         "--cache-path",
         cache_path
     )
-    .assert()
     .success()
     .stdout(predicate::str::is_empty())
     .stderr(
@@ -285,7 +274,6 @@ fn clear_cache() {
         cache_path,
         "--clear-cache"
     )
-    .assert()
     .success()
     .stdout(predicate::str::is_empty())
     .stderr(
@@ -312,7 +300,6 @@ fn recursive() {
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 
     hld!("--recursive", tmp)
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(format!(
@@ -340,7 +327,6 @@ fn symlinking() {
     assert!(!is_symlink.eval(bar.path()));
 
     hld!(tmp.child("*.txt"), "--strategy", "symlink")
-        .assert()
         .success()
         .stdout(predicate::str::is_empty())
         .stderr(predicate::str::contains(format!(

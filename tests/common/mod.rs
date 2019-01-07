@@ -50,7 +50,7 @@ macro_rules! hld {
     ( $( $v:expr ),* ) => (
         {
             let temp_vec: Vec<String> = vec![$($v.to_string(),)*];
-            Command::main_binary().unwrap().args(&temp_vec)
+            Command::main_binary().unwrap().args(&temp_vec).assert()
         }
     );
 }
