@@ -47,14 +47,62 @@ fn bad_option() {
 }
 
 #[test]
-fn log_level() {
+fn log_level_error() {
+    Command::main_binary()
+        .unwrap()
+        .args(&["--log-level", "error"])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::is_empty());
+}
+
+#[test]
+fn log_level_info() {
+    Command::main_binary()
+        .unwrap()
+        .args(&["--log-level", "info"])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(
+            predicate::str::contains(" saved in the deduplication of ")
+                .and(predicate::str::contains("trace: ").not())
+                .and(predicate::str::contains("debug: ").not())
+                .and(predicate::str::contains("info: ").not()),
+        );
+}
+
+#[test]
+fn log_level_debug() {
     Command::main_binary()
         .unwrap()
         .args(&["--log-level", "debug"])
         .assert()
         .success()
         .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains("debug: cache path:"));
+        .stderr(
+            predicate::str::contains(" saved in the deduplication of ")
+                .and(predicate::str::contains("trace: ").not())
+                .and(predicate::str::contains("debug: "))
+                .and(predicate::str::contains("info: ").not()),
+        );
+}
+
+#[test]
+fn log_level_trace() {
+    Command::main_binary()
+        .unwrap()
+        .args(&["--log-level", "trace"])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(
+            predicate::str::contains(" saved in the deduplication of ")
+                .and(predicate::str::contains("trace: "))
+                .and(predicate::str::contains("debug: "))
+                .and(predicate::str::contains("info: ")),
+        );
 }
 
 #[test]
