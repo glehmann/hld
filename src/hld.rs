@@ -201,7 +201,7 @@ fn file_hardlinks(
         if hinode != inode && hinode.0 == inode.0 {
             debug!(
                 "{}ing {} and {}",
-                strategy.to_string(),
+                strategy,
                 path.display(),
                 hardlink.display(),
             );
@@ -222,7 +222,7 @@ fn file_hardlinks(
                 "{} and {} are already {}ed",
                 path.display(),
                 hardlink.display(),
-                strategy.to_string(),
+                strategy,
             );
         }
     }

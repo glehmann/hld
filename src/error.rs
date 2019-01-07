@@ -40,7 +40,7 @@ pub trait ToGlobPatternErr<T> {
     fn with_glob(self: Self, glob: &str) -> Result<T>;
 }
 
-impl<T> ToGlobPatternErr<T> for std::result::Result<T, glob::PatternError> {
+impl<T> ToGlobPatternErr<T> for result::Result<T, glob::PatternError> {
     fn with_glob(self: Self, glob: &str) -> Result<T> {
         self.map_err(|e| Error::GlobPattern {
             source: e,
