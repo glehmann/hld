@@ -7,6 +7,7 @@ mod cli;
 mod cli_logger;
 mod error;
 mod hld;
+mod strategy;
 
 use std::io;
 use structopt::StructOpt;

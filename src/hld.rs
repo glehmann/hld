@@ -1,4 +1,5 @@
-use crate::cli::Strategy;
+use crate::error::*;
+use crate::strategy::*;
 use bincode;
 use blake2_rfc::blake2b::Blake2b;
 use fs2::FileExt;
@@ -14,7 +15,6 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::vec::Vec;
-use crate::error::*;
 
 const DIGEST_BYTES: usize = 32;
 type Digest = [u8; DIGEST_BYTES];
