@@ -5,12 +5,13 @@ extern crate maplit;
 
 mod cli;
 mod cli_logger;
+mod error;
 mod hld;
 
 use std::io;
 use structopt::StructOpt;
 
-fn run() -> hld::Result<()> {
+fn run() -> error::Result<()> {
     let args = cli::Config::from_args();
     cli_logger::init(args.log_level)?;
 

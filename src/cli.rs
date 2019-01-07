@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::StructOpt;
+use crate::error::*;
 
 /// Hard Link Deduplicator
 #[derive(StructOpt, Debug)]
@@ -76,8 +77,8 @@ pub enum Strategy {
 }
 
 impl FromStr for Strategy {
-    type Err = crate::hld::Error;
-    fn from_str(value: &str) -> Result<Strategy, Self::Err> {
+    type Err = Error;
+    fn from_str(value: &str) -> Result<Strategy> {
         let value = value.to_lowercase();
         if value == "hardlink" {
             Ok(Strategy::HardLink)
@@ -86,7 +87,7 @@ impl FromStr for Strategy {
         } else if value == "reflink" {
             Ok(Strategy::RefLink)
         } else {
-            Err(crate::hld::Error::Strategy { name: value })
+            Err(crate::error::Error::Strategy { name: value })
         }
     }
 }
