@@ -357,9 +357,11 @@ fn symlinking() {
     foo.write_str(&lorem_ipsum).unwrap();
     bar.write_str(&lorem_ipsum).unwrap();
 
+    let is_symlink = predicate::path::is_symlink();
+
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
-    assert!(!common::is_symlink(foo.path()));
-    assert!(!common::is_symlink(bar.path()));
+    assert!(!is_symlink.eval(foo.path()));
+    assert!(!is_symlink.eval(bar.path()));
 
     Command::main_binary()
         .unwrap()
@@ -374,7 +376,7 @@ fn symlinking() {
         )));
 
     assert_eq!(common::inos(foo.path()), common::inos(bar.path()));
-    assert!(common::is_symlink(foo.path()) ^ common::is_symlink(bar.path()));
+    assert!(is_symlink.eval(foo.path()) ^ is_symlink.eval(bar.path()));
     assert_eq!(
         fs::read_link(foo.path()).unwrap_or(foo.path().to_path_buf()),
         fs::read_link(bar.path()).unwrap_or(bar.path().to_path_buf())

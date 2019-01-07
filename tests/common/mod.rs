@@ -27,9 +27,3 @@ pub fn inos(path: &Path) -> (u64, u64) {
     let metadata = fs::metadata(path).unwrap();
     (metadata.st_dev(), metadata.ino())
 }
-
-/// test if a path is a symlink
-pub fn is_symlink(path: &Path) -> bool {
-    let symlink_metadata = fs::symlink_metadata(path).unwrap();
-    symlink_metadata.file_type().is_symlink()
-}
