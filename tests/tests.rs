@@ -411,6 +411,40 @@ fn test_recursive() {
     assert_eq!(inos(foo.path()), inos(bar.path()));
 }
 
+#[test]
+fn test_symlinking() {
+    let lorem_ipsum = lipsum(100);
+    // set up the test dir
+    let tmp = assert_fs::TempDir::new().unwrap();
+    let foo = tmp.child("foo.txt");
+    let bar = tmp.child("bar.txt");
+    foo.write_str(&lorem_ipsum).unwrap();
+    bar.write_str(&lorem_ipsum).unwrap();
+
+    assert_ne!(inos(foo.path()), inos(bar.path()));
+    assert!(!is_symlink(foo.path()));
+    assert!(!is_symlink(bar.path()));
+
+    Command::main_binary()
+        .unwrap()
+        .arg(tmp.child("*.txt").path())
+        .args(&["--strategy", "symlink"])
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::contains(format!(
+            "{} saved in the deduplication of 1 files",
+            pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
+        )));
+
+    assert_eq!(inos(foo.path()), inos(bar.path()));
+    assert!(is_symlink(foo.path()) ^ is_symlink(bar.path()));
+    assert_eq!(
+        fs::read_link(foo.path()).unwrap_or(foo.path().to_path_buf()),
+        fs::read_link(bar.path()).unwrap_or(bar.path().to_path_buf())
+    );
+}
+
 // utility functions from here
 
 use std::fs;
@@ -441,4 +475,10 @@ impl TestPathChild for assert_fs::fixture::ChildPath {
 fn inos(path: &Path) -> (u64, u64) {
     let metadata = fs::metadata(path).unwrap();
     (metadata.st_dev(), metadata.ino())
+}
+
+/// test if a path is a symlink
+fn is_symlink(path: &Path) -> bool {
+    let symlink_metadata = fs::symlink_metadata(path).unwrap();
+    symlink_metadata.file_type().is_symlink()
 }
