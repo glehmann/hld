@@ -247,7 +247,10 @@ pub fn glob_to_files(globs: &[String]) -> Result<Vec<PathBuf>> {
             Ok(res)
         })
         .collect::<Result<Vec<VecDeque<PathBuf>>>>()?;
-    Ok(res.iter().cloned().flat_map(|v| v).collect())
+    let mut res: Vec<PathBuf> = res.iter().cloned().flat_map(|v| v).collect();
+    res.par_sort();
+    res.dedup();
+    Ok(res)
 }
 
 /// returns the inodes of the partition and of the file
