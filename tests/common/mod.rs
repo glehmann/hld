@@ -1,7 +1,6 @@
 use std::fs;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
-use std::path::Path;
 
 pub trait TestPathChild {
     fn child<P>(&self, path: P) -> assert_fs::fixture::ChildPath
@@ -40,8 +39,8 @@ impl TestToString for assert_fs::TempDir {
 
 /// returns the inodes of the partition and of the file
 #[allow(dead_code)]
-pub fn inos(path: &Path) -> (u64, u64) {
-    let metadata = fs::metadata(path).unwrap();
+pub fn inos(path: &assert_fs::fixture::ChildPath) -> (u64, u64) {
+    let metadata = fs::metadata(path.path()).unwrap();
     (metadata.st_dev(), metadata.ino())
 }
 
