@@ -4,6 +4,8 @@ use crate::common::*;
 use assert_cmd::prelude::*;
 use assert_fs::prelude::*;
 use lipsum::lipsum;
+use predicates::prelude::predicate::path::*;
+use predicates::prelude::predicate::str::*;
 use predicates::prelude::*;
 use std::fs;
 use std::fs::Permissions;
@@ -15,26 +17,24 @@ use std::string::ToString;
 fn empty_run() {
     hld!()
         .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains(
-            "0 B saved in the deduplication of 0 files",
-        ));
+        .stdout(is_empty())
+        .stderr(contains("0 B saved in the deduplication of 0 files"));
 }
 
 #[test]
 fn parallel() {
     hld!("--log-level", "debug", "--parallel", "5")
         .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains("debug: using 5 threads at most"));
+        .stdout(is_empty())
+        .stderr(contains("debug: using 5 threads at most"));
 }
 
 #[test]
 fn invalid_glob() {
     hld!("foua/[etsin")
         .failure()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains(
+        .stdout(is_empty())
+        .stderr(contains(
             "error: foua/[etsin: Pattern syntax error near position 5: invalid range pattern",
         ));
 }
@@ -53,8 +53,8 @@ fn deduplication() {
 
     hld!(tmp.child("*.txt"))
         .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains(format!(
+        .stdout(is_empty())
+        .stderr(contains(format!(
             "{} saved in the deduplication of 1 files",
             pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
@@ -76,7 +76,7 @@ fn dryrun() {
     let cache_path = cache_dir.child("digests");
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
-    cache_path.assert(predicate::path::missing());
+    cache_path.assert(missing());
 
     hld!(
         "--log-level",
@@ -89,14 +89,14 @@ fn dryrun() {
         "--dry-run"
     )
     .success()
-    .stdout(predicate::str::is_empty())
-    .stderr(predicate::str::contains(format!(
+    .stdout(is_empty())
+    .stderr(contains(format!(
         "{} saved in the deduplication of 1 files",
         pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
     )));
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
-    cache_path.assert(predicate::path::missing());
+    cache_path.assert(missing());
 }
 
 #[test]
@@ -111,8 +111,8 @@ fn unreadable_file() {
 
     hld!(foo)
         .failure()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains(format!(
+        .stdout(is_empty())
+        .stderr(contains(format!(
             "error: {}: Permission denied (os error 13)",
             foo.path().display()
         )));
@@ -130,10 +130,8 @@ fn no_deduplication_different_files() {
 
     hld!(tmp.child("*.txt"))
         .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains(
-            "0 B saved in the deduplication of 0 files",
-        ));
+        .stdout(is_empty())
+        .stderr(contains("0 B saved in the deduplication of 0 files"));
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 }
@@ -150,10 +148,8 @@ fn no_deduplication_empty_files() {
 
     hld!(tmp.child("*.txt"))
         .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains(
-            "0 B saved in the deduplication of 0 files",
-        ));
+        .stdout(is_empty())
+        .stderr(contains("0 B saved in the deduplication of 0 files"));
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
 }
@@ -172,7 +168,7 @@ fn deduplication_with_cache() {
     let cache_path = cache_dir.child("digests");
 
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
-    cache_path.assert(predicate::path::missing());
+    cache_path.assert(missing());
 
     // first warm up the cache
     hld!(
@@ -184,16 +180,16 @@ fn deduplication_with_cache() {
         cache_path
     )
     .success()
-    .stdout(predicate::str::is_empty())
+    .stdout(is_empty())
     .stderr(
-        predicate::str::contains(format!(
+        contains(format!(
             "debug: computing digest of {}",
             foo.path().display()
         ))
-        .and(predicate::str::contains("debug: saving updated cache")),
+        .and(contains("debug: saving updated cache")),
     );
 
-    cache_path.assert(predicate::path::exists());
+    cache_path.assert(exists());
 
     // then deduplicate
     hld!(
@@ -206,22 +202,22 @@ fn deduplication_with_cache() {
         bar
     )
     .success()
-    .stdout(predicate::str::is_empty())
+    .stdout(is_empty())
     .stderr(
-        predicate::str::contains(format!(
+        contains(format!(
             "debug: hardlinking {} and {}",
             foo.path().display(),
             bar.path().display()
         ))
-        .and(predicate::str::contains("debug: saving updated cache").not())
+        .and(contains("debug: saving updated cache").not())
         .and(
-            predicate::str::contains(format!(
+            contains(format!(
                 "debug: computing digest of {}",
                 foo.path().display()
             ))
             .not(),
         )
-        .and(predicate::str::contains(format!(
+        .and(contains(format!(
             "debug: computing digest of {}",
             bar.path().display()
         ))),
@@ -241,7 +237,7 @@ fn clear_cache() {
     let cache_dir = assert_fs::TempDir::new().unwrap();
     let cache_path = cache_dir.child("digests");
 
-    cache_path.assert(predicate::path::missing());
+    cache_path.assert(missing());
 
     // first warm up the cache
     hld!(
@@ -253,16 +249,16 @@ fn clear_cache() {
         cache_path
     )
     .success()
-    .stdout(predicate::str::is_empty())
+    .stdout(is_empty())
     .stderr(
-        predicate::str::contains(format!(
+        contains(format!(
             "debug: computing digest of {}",
             foo.path().display()
         ))
-        .and(predicate::str::contains("debug: saving updated cache")),
+        .and(contains("debug: saving updated cache")),
     );
 
-    cache_path.assert(predicate::path::exists());
+    cache_path.assert(exists());
 
     // check that the digest is recomputed with --clear-cache
     hld!(
@@ -275,13 +271,13 @@ fn clear_cache() {
         "--clear-cache"
     )
     .success()
-    .stdout(predicate::str::is_empty())
+    .stdout(is_empty())
     .stderr(
-        predicate::str::contains(format!(
+        contains(format!(
             "debug: computing digest of {}",
             foo.path().display()
         ))
-        .and(predicate::str::contains("debug: saving updated cache")),
+        .and(contains("debug: saving updated cache")),
     );
 }
 
@@ -301,8 +297,8 @@ fn recursive() {
 
     hld!("--recursive", tmp)
         .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains(format!(
+        .stdout(is_empty())
+        .stderr(contains(format!(
             "{} saved in the deduplication of 1 files",
             pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
@@ -320,22 +316,20 @@ fn symlinking() {
     foo.write_str(&lorem_ipsum).unwrap();
     bar.write_str(&lorem_ipsum).unwrap();
 
-    let is_symlink = predicate::path::is_symlink();
-
     assert_ne!(common::inos(foo.path()), common::inos(bar.path()));
-    assert!(!is_symlink.eval(foo.path()));
-    assert!(!is_symlink.eval(bar.path()));
+    foo.assert(is_symlink().not());
+    bar.assert(is_symlink().not());
 
     hld!(tmp.child("*.txt"), "--strategy", "symlink")
         .success()
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains(format!(
+        .stdout(is_empty())
+        .stderr(contains(format!(
             "{} saved in the deduplication of 1 files",
             pretty_bytes::converter::convert(lorem_ipsum.len() as f64)
         )));
 
     assert_eq!(common::inos(foo.path()), common::inos(bar.path()));
-    assert!(is_symlink.eval(foo.path()) ^ is_symlink.eval(bar.path()));
+    assert!(is_symlink().eval(foo.path()) ^ is_symlink().eval(bar.path()));
     assert_eq!(
         fs::read_link(foo.path()).unwrap_or(foo.path().to_path_buf()),
         fs::read_link(bar.path()).unwrap_or(bar.path().to_path_buf())
