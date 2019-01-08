@@ -3,6 +3,7 @@ use crate::strategy::*;
 use bincode;
 use blake2_rfc::blake2b::Blake2b;
 use fs2::FileExt;
+use itertools::chain;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -52,13 +53,9 @@ fn find_file_duplicates<'a>(
     let ino_map = Mutex::new(HashMap::new());
     let cache = update_cache(caches, dry_run, cache_path, clear_cache)?;
 
-    let mut all_paths: Vec<&'a PathBuf> = vec![];
-    all_paths.extend(caches.iter());
-    all_paths.extend(paths.iter());
-
     // get some metadata and filter out the empty files
     let mut path_inos: Vec<(&'a PathBuf, (u64, u64))> = Vec::new();
-    for path in all_paths {
+    for path in chain(caches, paths) {
         let metadata = fs::metadata(path).with_path(path)?;
         if metadata.len() > 0 {
             path_inos.push((path, inos_m(&metadata)));
