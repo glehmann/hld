@@ -11,6 +11,7 @@ use std::fs;
 use std::fs::File;
 use std::io;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
+use std::os::unix::fs as ufs;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 use std::path::PathBuf;
@@ -206,10 +207,8 @@ fn file_hardlinks(
             if !dry_run {
                 std::fs::remove_file(hardlink).with_path(hardlink)?;
                 match strategy {
-                    Strategy::SymLink => {
-                        std::os::unix::fs::symlink(path, hardlink).with_path(path)?
-                    }
-                    Strategy::HardLink => std::fs::hard_link(path, hardlink).with_path(path)?,
+                    Strategy::SymLink => ufs::symlink(path, hardlink).with_path(path)?,
+                    Strategy::HardLink => fs::hard_link(path, hardlink).with_path(path)?,
                     Strategy::RefLink => reflink::reflink(path, hardlink).with_path(path)?,
                 }
                 restore_file_attributes(hardlink, &dest_metadata)?;
