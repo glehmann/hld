@@ -33,6 +33,22 @@ fn bad_option() {
 }
 
 #[test]
+fn bad_strategy() {
+    hld!("--strategy", "dumb")
+        .failure()
+        .stdout(is_empty())
+        .stderr(contains(r"unsupported 'dumb' strategy"));
+}
+
+#[test]
+fn bad_glob_pattern() {
+    hld!("foo/***")
+        .failure()
+        .stdout(is_empty())
+        .stderr(contains(r"error: foo/***: "));
+}
+
+#[test]
 fn log_level_error() {
     hld!("--log-level", "error")
         .success()

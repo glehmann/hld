@@ -15,7 +15,7 @@ custom_error! {pub Error
     GlobPattern {source: glob::PatternError, glob: String} = "{glob}: {source}",
     Glob {source: glob::GlobError} = "{source}",
     Cache {source: bincode::Error} = "{source}",
-    Strategy {name: String} = "unsupported {} strategy",
+    Strategy {name: String} = "unsupported '{}' strategy",
     Logger {source: log::SetLoggerError} = "{source}",
     ThreadPool {source: rayon::ThreadPoolBuildError} = "{source}",
 }
