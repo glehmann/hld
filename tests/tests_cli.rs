@@ -41,14 +41,6 @@ fn bad_strategy() {
 }
 
 #[test]
-fn bad_glob_pattern() {
-    hld!("foo/***")
-        .failure()
-        .stdout(is_empty())
-        .stderr(contains(r"error: foo/***: "));
-}
-
-#[test]
 fn log_level_error() {
     hld!("--log-level", "error")
         .success()
