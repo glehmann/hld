@@ -44,12 +44,38 @@ pub fn inos(path: &assert_fs::fixture::ChildPath) -> (u64, u64) {
     (metadata.st_dev(), metadata.ino())
 }
 
+#[cfg(not(feature = "kcov"))]
 #[macro_export]
 macro_rules! hld {
     ( $( $v:expr ),* ) => (
         {
             let temp_vec: Vec<String> = vec![$($v.to_string(),)*];
             Command::main_binary().unwrap().args(&temp_vec).assert()
+        }
+    );
+}
+
+#[cfg(feature = "kcov")]
+#[macro_export]
+macro_rules! hld {
+    ( $( $v:expr ),* ) => (
+        {
+            let bin_path = escargot::CargoBuild::new()
+                .current_release()
+                .current_target()
+                .run()
+                .unwrap()
+                .path()
+                .to_path_buf();
+            let coverage_dir = bin_path.parent().unwrap().join("coverage");
+            std::fs::create_dir_all(&coverage_dir).unwrap();
+            let temp_vec: Vec<String> = vec![
+                "--include-pattern=/src".to_string(),
+                coverage_dir.display().to_string(),
+                bin_path.display().to_string(),
+                $($v.to_string(),)*
+            ];
+            Command::new("kcov").args(&temp_vec).assert()
         }
     );
 }
