@@ -71,6 +71,7 @@ macro_rules! hld {
             std::fs::create_dir_all(&coverage_dir).unwrap();
             let temp_vec: Vec<String> = vec![
                 "--include-pattern=/src".to_string(),
+                "--exclude-pattern=/.cargo".to_string(),
                 coverage_dir.display().to_string(),
                 bin_path.display().to_string(),
                 $($v.to_string(),)*
