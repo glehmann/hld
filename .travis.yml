@@ -40,7 +40,7 @@ matrix:
       rust: stable
       install:
         - curl -L https://github.com/SimonKagstrom/kcov/archive/master.tar.gz | tar xvz
-        - cd kcov-master && cmake . && make -j install
+        - cd kcov-master && cmake . && make -j && sudo make install
       script:
         - echo $PATH
         - which kcov
