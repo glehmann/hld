@@ -5,31 +5,10 @@ matrix:
   allow_failures:
     - name: rust beta
     - name: rust nightly
+    - name: coverage
   include:
     - name: rust stable
       rust: stable
-      after_success: |
-        wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-        tar xzf master.tar.gz &&
-        cd kcov-master &&
-        mkdir build &&
-        cd build &&
-        cmake .. &&
-        make &&
-        make install DESTDIR=../../kcov-build &&
-        cd ../.. &&
-        rm -rf kcov-master &&
-        for file in `find target/debug -maxdepth 1 -executable -type f`; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-        bash <(curl -s https://codecov.io/bash) &&
-        echo "Uploaded code coverage"
-      addons: # required for kcov
-        apt:
-          packages:
-            - libcurl4-openssl-dev
-            - libelf-dev
-            - libdw-dev
-            - binutils-dev
-            - cmake
 
     - name: rust beta
       rust: beta
@@ -56,6 +35,27 @@ matrix:
         - rustup component add clippy-preview
       script:
         - cargo clippy -- -D clippy
+
+    - name: coverage
+      rust: stable
+      script: |
+        curl -L https://github.com/SimonKagstrom/kcov/archive/master.tar.gz | tar xvz &&
+        cd kcov-master &&
+        cmake . &&
+        make -j &&
+        cd .. &&
+        export PATH=$PWD/bin &&
+        cargo test --features kcov -- --test-threads 1 &&
+        bash <(curl -s https://codecov.io/bash) &&
+        echo "Uploaded code coverage"
+      addons: # required for kcov
+        apt:
+          packages:
+            - libcurl4-openssl-dev
+            - libelf-dev
+            - libdw-dev
+            - binutils-dev
+            - cmake
 
 script:
 - cargo test --verbose
