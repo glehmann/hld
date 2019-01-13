@@ -38,10 +38,13 @@ matrix:
 
     - name: coverage
       rust: stable
-      script:
+      install:
         - curl -L https://github.com/SimonKagstrom/kcov/archive/master.tar.gz | tar xvz
-        - cd kcov-master && cmake . && make -j
-        - PATH=$PWD/kcov-master/bin:$PATH cargo test --features kcov -- --test-threads 1
+        - cd kcov-master && cmake . && make -j install
+      script:
+        - echo $PATH
+        - which kcov
+        - cargo test --features kcov -- --test-threads 1
         - bash <(curl -s https://codecov.io/bash)
       addons: # required for kcov
         apt:
