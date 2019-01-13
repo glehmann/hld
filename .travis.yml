@@ -66,12 +66,17 @@ branches:
   - /^v\d+\.\d+\.\d+.*$/
   - master
 
+# Need to cache the whole `.cargo` directory to keep .crates.toml for
+# cargo-update to work - see https://levans.fr/rust_travis_cache.html
 cache:
+  directories:
+    - /home/travis/.cargo
   apt: true
-  cargo: true
 before_cache:
-# Travis can't cache files that are not readable by "others"
-- chmod -R a+r $HOME/.cargo
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
+  # But don't cache the cargo registry
+  - rm -rf /home/travis/.cargo/registry
 
 notifications:
   email:
