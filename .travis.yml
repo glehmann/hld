@@ -44,7 +44,7 @@ matrix:
         cmake . &&
         make -j &&
         cd .. &&
-        export PATH=$PWD/bin &&
+        export PATH=$PWD/bin:$PATH &&
         cargo test --features kcov -- --test-threads 1 &&
         bash <(curl -s https://codecov.io/bash) &&
         echo "Uploaded code coverage"
