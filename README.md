@@ -169,6 +169,13 @@ $ ./target/release/hld --version
 hld 0.1.0
 ```
 
+`hld` can be made approximately 15% faster by using rust nightly and the
+`simd` feature:
+
+```
+$ cargo +nightly --features simd build --release
+```
+
 Testing
 -------
 

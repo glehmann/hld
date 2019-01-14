@@ -4,7 +4,6 @@ matrix:
   fast_finish: true
   allow_failures:
     - name: rust beta
-    - name: rust nightly
     - name: coverage
   include:
     - name: rust stable
@@ -15,6 +14,8 @@ matrix:
 
     - name: rust nightly
       rust: nightly
+      script:
+        - cargo test --verbose --features simd --release
 
     - name: fmt
       rust: stable
@@ -50,7 +51,7 @@ matrix:
             - cmake
 
 script:
-- cargo test --verbose
+  - cargo test --verbose
 
 # Need to cache the whole `.cargo` directory to keep .crates.toml for
 # cargo-update to work - see https://levans.fr/rust_travis_cache.html

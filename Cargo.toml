@@ -31,3 +31,4 @@ escargot = "0.4.0"
 
 [features]
 kcov = []
+simd = ["blake2-rfc/simd_opt"]
