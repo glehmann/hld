@@ -194,6 +194,18 @@ $ strip target/release/hld
 $ upx --ultra-brute target/release/hld
 ```
 
+Code coverage
+-------------
+
+The code coverage may be computed with [kcov](https://simonkagstrom.github.io/kcov/).
+Make sure the `kcov` executable is in the `PATH` then run:
+
+```fish
+$ cargo test --features kcov -- --test-threads 1
+```
+
+The report is available in `target/x86_64-unknown-linux-gnu/debug/coverage/index.html`.
+
 TODO
 ----
 
@@ -201,5 +213,4 @@ TODO
 * ensure that the newest date is kept on the hardlinked files (probably)
 * find a better way to pass user options without changing the function signature
   at each new option
-* code coverage (look at codecov and coveralls)
 * which duplicate do we keep when symlinking? The first one? From the caches if possible?
