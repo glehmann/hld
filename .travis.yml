@@ -23,12 +23,6 @@ matrix:
       script:
         - cargo fmt -- --check
 
-    # - name: warnings
-    #   rust: stable
-    #   env: RUSTFLAGS="-D warnings"
-    #   script:
-    #     - cargo check --tests
-
     - name: clippy
       rust: stable
       install:
@@ -57,12 +51,6 @@ matrix:
 
 script:
 - cargo test --verbose
-
-branches:
-  only:
-  # Release tags
-  - /^v\d+\.\d+\.\d+.*$/
-  - master
 
 # Need to cache the whole `.cargo` directory to keep .crates.toml for
 # cargo-update to work - see https://levans.fr/rust_travis_cache.html
