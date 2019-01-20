@@ -15,10 +15,10 @@ matrix:
     - name: rust nightly
       rust: nightly
       script:
-        - cargo build --release --verbose --features simd
+        - cargo test --release --verbose --features simd --no-run
         - strip target/release/hld
         - upx --ultra-brute --lzma target/release/hld
-        - cargo test --verbose --features simd --release
+        - cargo test --release --verbose --features simd
         - mv target/release/hld target/release/hld-`target/release/hld --version | sed -e 's/hld //'`-`uname -m`
       addons:
         apt:
