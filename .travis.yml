@@ -15,10 +15,10 @@ matrix:
     - name: rust nightly
       rust: nightly
       script:
-        - cargo test --release --verbose --features simd --no-run
+        - cargo test --release --features simd --no-run
         - strip target/release/hld
         - upx --ultra-brute --lzma target/release/hld
-        - cargo test --release --verbose --features simd
+        - cargo test --release --features simd
         - mv target/release/hld target/release/hld-`target/release/hld --version | sed -e 's/hld //'`-`uname -m`
       addons:
         apt:
@@ -59,7 +59,7 @@ matrix:
             - cmake
 
 script:
-  - cargo test --verbose
+  - cargo test
 
 # Need to cache the whole `.cargo` directory to keep .crates.toml for
 # cargo-update to work - see https://levans.fr/rust_travis_cache.html
