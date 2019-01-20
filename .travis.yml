@@ -15,7 +15,15 @@ matrix:
     - name: rust nightly
       rust: nightly
       script:
+        - cargo build --release --verbose --features simd
+        - strip target/release/hld
+        - upx --ultra-brute --lzma target/release/hld
         - cargo test --verbose --features simd --release
+        - mv target/release/hld target/release/hld-`target/release/hld --version | sed -e 's/hld //'`-`uname -m`
+      addons:
+        apt:
+          packages:
+            - upx
 
     - name: fmt
       rust: stable
@@ -68,3 +76,14 @@ before_cache:
 notifications:
   email:
     on_success: never
+
+deploy:
+  provider: releases
+  api_key:
+    secure: XqSo1V1l0SxS7j3DKklFJAzpME5FHN6Xk4cMaxei2pwHotUEAc6REc23A4ghLh5VE/TbHiQ6NsT6VNi3hL4J3dJ5hz7vJ27YxVYbdYTEFR3lLhgOOOf/JM+ZzQ5cJRP3iEgPhQv1ohFpfYx1U/u6f03pDlji7Ju0PpmC4tFspg0JpuVywAArNN24UfUKKi/efRwyUZ/QXDhSi0xZG4Ld3xoK9pTXV4DDTtZY1wdcyw3DuxW2XG/MNz7+DpkjMDPRsSzhpVCwgijc4o+T0XidDIA1dIz0M5KCqn5Vt2c29VqmUZaMXOv0Nmj6OE8+OkDiBLgmR/lTxh4Zz3YXx8Y/wB98c23BHBNrdXD01G/VRuODXJTADpXa62RAMwxb8XaPVby4S5zGtl1y0fjMvChJ2xwGBCFn2oEmuOdq4+DjEyzDwvTsAgelHDUI23COuHpbn8nntLvrafMLOKjzR3klvmUVfNe7zAefe1R5JVzvcEijmDy+47urwe9N7qkV0bPBBqUg0d9QFpdgZMLDEDL8gkmTl87lJPE2J1z6XZiZv7Tjc6AN8FwcOMkxMVJSwAMKUUzH1B6LUtrb4gUJ0O/1AvDUgMGOjfjlh8/Thg2g0uTQwwAji6rJ09K9N7cthILxTcnHlf875OcpvDmJ6OAuSuq9q34u/GdM/Hn0LoYNvHU=
+  file: target/release/hld-*-*
+  skip_cleanup: true
+  on:
+    repo: glehmann/hld
+    rust: nightly
+    # tags: true
