@@ -11,13 +11,13 @@ $ du -sh myproject ~/.m2
 896M    myproject
 912M    .m2
 $ time hld -r -c ~/.m2 myproject
-420.17 MB saved in the deduplication of 671 files
-real 0.58
-user 2.10
-sys 0.35
+420.23 MB saved in the deduplication of 675 files
+real 0.47
+user 1.17
+sys 0.22
 ```
 
-420MB — 46% of the build directory size — saved in just 0.6 seconds :-)
+420MB — 46% of the build directory size — saved in just 0.5 seconds :-)
 
 [![Travis Status](https://api.travis-ci.com/glehmann/hld.svg?branch=master)](https://travis-ci.com/glehmann/hld)
 [![codecov Status](https://codecov.io/gh/glehmann/hld/branch/master/graph/badge.svg)](https://codecov.io/gh/glehmann/hld)
