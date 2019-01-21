@@ -81,6 +81,7 @@ deploy:
   provider: releases
   api_key:
     secure: OnnKatnWDoUegCSgU/7m1HGgv49YbCUnXZYfFeDrf7ILaY1n0NXZkSlbrDt3KMepihUssE74q3DGx8YeqQ50eZfBFyOPQCWAwmzTBlDo8puj9/07bkfTLC9uhGS11Y+lTU6OIc4jZp1UbPBOTH3nAC73xgnvN/yBvo7Gf52WR11oiiFQ0yw4WoHMb36ccBhGne/TuftVup4y2/zcJ4KoIVugyZENW6VkCp2EbCcCvSfNM8VzMYt4b9Dek1pLAYNdrU9/sdOJWbYiHYTDPA2cROo1Qo4xH2nlVPYoEcc8qK5ifxxYJDBHDVy4yWXFW7eOHlaTP30ypdbKS0N1zWo39LIfwCkT7EwuQNsomZvQ4T/HUjuhZa2af/+6yePcv9ekKlqAzRQq1q/3GHwd7Iz2KSAkJCxGIYLCq0KbJDto3brzYfZMDA8kUBzqKSnwJktnQBdfN0g7z1iMhvgikZ2Z57Mjb3cN8MF5a+X+sFOXWm+J/IouR7QZm8+ZjWXUGr/864gWo2ZzymlCYb2eYMghCJqp5g/YieEGMZjVnCexFmhHiJLX6/YfuAC3gshaHHNRuphRiAem+M4/uBm5fFZt2aOlzvC8r5h+ids41hmvJcAyVE+EDsZ/c9WNKLHFR/bK4yxrxYfHM1qvDZPQ869k+SchlT+/3DVKmFeuMGd3nzs=
+  file_glob: true
   file: target/release/hld-*-*
   skip_cleanup: true
   draft: true
