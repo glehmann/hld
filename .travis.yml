@@ -18,8 +18,8 @@ matrix:
         - cargo test --release --features simd --no-run
         - strip target/release/hld
         - upx --ultra-brute --lzma target/release/hld
+        - cp target/release/hld target/release/hld-`target/release/hld --version | sed -e 's/hld //'`-`uname -m`
         - cargo test --release --features simd
-        - mv target/release/hld target/release/hld-`target/release/hld --version | sed -e 's/hld //'`-`uname -m`
       addons:
         apt:
           packages:
