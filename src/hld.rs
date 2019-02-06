@@ -1,3 +1,4 @@
+use crate::cli::*;
 use crate::error::*;
 use crate::strategy::*;
 use bincode;
@@ -44,15 +45,13 @@ fn file_digest(path: &Path) -> Result<Digest> {
 
 /// find the duplicates in the provided paths
 fn find_file_duplicates<'a>(
+    config: &Config,
     paths: &'a [PathBuf],
     caches: &'a [PathBuf],
-    dry_run: bool,
-    cache_path: &Path,
-    clear_cache: bool,
 ) -> Result<Vec<Vec<&'a PathBuf>>> {
     // compute a map of the digests to the path with that digest
     let ino_map = Mutex::new(HashMap::new());
-    let cache = update_cache(caches, dry_run, cache_path, clear_cache)?;
+    let cache = update_cache(config, caches)?;
 
     // get some metadata and filter out the empty files
     let mut path_inos: Vec<(&'a PathBuf, (u64, u64))> = Vec::new();
@@ -98,21 +97,16 @@ fn find_file_duplicates<'a>(
         .collect())
 }
 
-fn update_cache(
-    paths: &[PathBuf],
-    dry_run: bool,
-    cache_path: &Path,
-    clear_cache: bool,
-) -> Result<HashMap<PathBuf, Digest>> {
+fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, Digest>> {
     // locking the cache
-    let lock_path = cache_path.with_extension("lock");
+    let lock_path = config.cache_path().with_extension("lock");
     let lock_file = File::create(&lock_path).with_path(&lock_path)?;
     lock_file.lock_exclusive().with_path(&lock_path)?;
 
-    let cache: HashMap<PathBuf, Digest> = if clear_cache {
+    let cache: HashMap<PathBuf, Digest> = if config.clear_cache {
         hashmap! {}
     } else {
-        File::open(&cache_path)
+        File::open(&config.cache_path())
             .ok()
             .map_or_else(HashMap::new, |reader| {
                 debug!("reading cache");
@@ -148,32 +142,25 @@ fn update_cache(
 
     if updated {
         debug!("saving updated cache with {} entries", live_cache.len());
-        if !dry_run {
-            let output_file = File::create(&cache_path).with_path(&cache_path)?;
+        if !config.dry_run {
+            let output_file = File::create(&config.cache_path()).with_path(&config.cache_path())?;
             bincode::serialize_into(io::BufWriter::new(&output_file), &live_cache)?;
         }
     }
 
     // unlock the cache
-    lock_file.unlock().with_path(&cache_path)?;
+    lock_file.unlock().with_path(&config.cache_path())?;
 
     Ok(new_digests)
 }
 
 /// find the duplicated files and replace them with hardlinks
-pub fn hardlink_deduplicate(
-    paths: &[PathBuf],
-    caches: &[PathBuf],
-    dry_run: bool,
-    cache_path: &Path,
-    clear_cache: bool,
-    strategy: Strategy,
-) -> Result<()> {
-    let dups = find_file_duplicates(paths, caches, dry_run, cache_path, clear_cache)?;
+pub fn hardlink_deduplicate(config: &Config, paths: &[PathBuf], caches: &[PathBuf]) -> Result<()> {
+    let dups = find_file_duplicates(config, paths, caches)?;
     let mut dedup_size: u64 = 0;
     let mut dedup_files: usize = 0;
     for dup in dups {
-        dedup_size += file_hardlinks(&dup[0], &dup[1..], dry_run, strategy)?;
+        dedup_size += file_hardlinks(config, &dup[0], &dup[1..])?;
         dedup_files += dup.len() - 1;
     }
     debug!("{} bytes saved", dedup_size);
@@ -186,12 +173,7 @@ pub fn hardlink_deduplicate(
     Ok(())
 }
 
-fn file_hardlinks(
-    path: &Path,
-    hardlinks: &[&PathBuf],
-    dry_run: bool,
-    strategy: Strategy,
-) -> Result<u64> {
+fn file_hardlinks(config: &Config, path: &Path, hardlinks: &[&PathBuf]) -> Result<u64> {
     let metadata = fs::metadata(path).with_path(path)?;
     let inode = inos_m(&metadata);
     for hardlink in hardlinks {
@@ -199,14 +181,14 @@ fn file_hardlinks(
         if hinode != inode && hinode.0 == inode.0 {
             debug!(
                 "{}ing {} and {}",
-                strategy,
+                config.strategy,
                 path.display(),
                 hardlink.display(),
             );
             let dest_metadata = fs::metadata(hardlink).with_path(hardlink)?;
-            if !dry_run {
+            if !config.dry_run {
                 std::fs::remove_file(hardlink).with_path(hardlink)?;
-                match strategy {
+                match config.strategy {
                     Strategy::SymLink => ufs::symlink(path, hardlink).with_path(path)?,
                     Strategy::HardLink => fs::hard_link(path, hardlink).with_path(path)?,
                     Strategy::RefLink => reflink::reflink(path, hardlink).with_path(path)?,
@@ -218,7 +200,7 @@ fn file_hardlinks(
                 "{} and {} are already {}ed",
                 path.display(),
                 hardlink.display(),
-                strategy,
+                config.strategy,
             );
         }
     }

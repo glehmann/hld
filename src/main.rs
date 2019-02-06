@@ -28,29 +28,21 @@ fn run() -> error::Result<()> {
             .build_global()?;
     }
 
-    let cache_path = args.cache_path();
     let file_globs = if args.recursive {
         args.files.iter().map(|d| format!("{}/**/*", d)).collect()
     } else {
-        args.files
+        args.files.clone()
     };
     let cache_globs = if args.recursive {
         args.caches.iter().map(|d| format!("{}/**/*", d)).collect()
     } else {
-        args.caches
+        args.caches.clone()
     };
     let files = hld::glob_to_files(&file_globs)?;
     let caches = hld::glob_to_files(&cache_globs)?;
     trace!("files: {:?}", files);
     trace!("caches: {:?}", caches);
-    hld::hardlink_deduplicate(
-        &files,
-        &caches,
-        args.dry_run,
-        &cache_path,
-        args.clear_cache,
-        args.strategy,
-    )?;
+    hld::hardlink_deduplicate(&args, &files, &caches)?;
     Ok(())
 }
 
