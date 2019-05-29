@@ -1,3 +1,5 @@
+#![allow(clippy::identity_conversion)]
+
 use crate::cli::*;
 use crate::error::*;
 use crate::strategy::*;
