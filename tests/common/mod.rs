@@ -3,9 +3,6 @@ use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
 
 pub trait TestPathChild {
-    fn child<P>(&self, path: P) -> assert_fs::fixture::ChildPath
-    where
-        P: AsRef<std::path::Path>;
     fn mkdir_all(&self) -> std::io::Result<()>;
 }
 
@@ -14,12 +11,6 @@ pub trait TestToString {
 }
 
 impl TestPathChild for assert_fs::fixture::ChildPath {
-    fn child<P>(&self, path: P) -> assert_fs::fixture::ChildPath
-    where
-        P: AsRef<std::path::Path>,
-    {
-        assert_fs::fixture::ChildPath::new(self.path().join(path))
-    }
     fn mkdir_all(&self) -> std::io::Result<()> {
         std::fs::create_dir_all(self.path())
     }
