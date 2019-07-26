@@ -41,7 +41,7 @@ macro_rules! hld {
     ( $( $v:expr ),* ) => (
         {
             let temp_vec: Vec<String> = vec![$($v.to_string(),)*];
-            Command::main_binary().unwrap().args(&temp_vec).assert()
+            Command::cargo_bin("hld").unwrap().args(&temp_vec).assert()
         }
     );
 }
