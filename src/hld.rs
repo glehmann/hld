@@ -231,7 +231,7 @@ pub fn glob_to_files(globs: &[String]) -> Result<Vec<PathBuf>> {
             Ok(res)
         })
         .collect::<Result<Vec<VecDeque<PathBuf>>>>()?;
-    let mut res: Vec<PathBuf> = res.iter().cloned().flat_map(|v| v).collect();
+    let mut res: Vec<PathBuf> = res.iter().cloned().flatten().collect();
     res.par_sort();
     res.dedup();
     Ok(res)
