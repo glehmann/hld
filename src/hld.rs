@@ -1,5 +1,3 @@
-#![allow(clippy::identity_conversion)]
-
 use crate::cli::*;
 use crate::error::*;
 use crate::strategy::*;
@@ -69,7 +67,7 @@ fn find_file_duplicates<'a>(
         .par_iter()
         .map(|(path, inode)| -> Result<(&'a PathBuf, Digest)> {
             let ino_digest: Option<Digest> =
-                ino_map.lock().unwrap().get(inode).map(|v| *v);
+                ino_map.lock().unwrap().get(inode).copied();
             let digest = if let Some(digest) = ino_digest {
                 digest
             } else {
