@@ -69,7 +69,7 @@ fn find_file_duplicates<'a>(
         .par_iter()
         .map(|(path, inode)| -> Result<(&'a PathBuf, Digest)> {
             let ino_digest: Option<Digest> =
-                ino_map.lock().unwrap().get(inode).and_then(|v| Some(*v));
+                ino_map.lock().unwrap().get(inode).map(|v| *v);
             let digest = if let Some(digest) = ino_digest {
                 digest
             } else {
