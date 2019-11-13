@@ -66,8 +66,7 @@ fn find_file_duplicates<'a>(
     let digests = path_inos
         .par_iter()
         .map(|(path, inode)| -> Result<(&'a PathBuf, Digest)> {
-            let ino_digest: Option<Digest> =
-                ino_map.lock().unwrap().get(inode).copied();
+            let ino_digest: Option<Digest> = ino_map.lock().unwrap().get(inode).copied();
             let digest = if let Some(digest) = ino_digest {
                 digest
             } else {
