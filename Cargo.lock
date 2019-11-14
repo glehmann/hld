@@ -325,7 +325,7 @@ dependencies = [
 
 [[package]]
 name = "hld"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "ansi_term 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "app_dirs 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
