@@ -221,7 +221,7 @@ pub fn glob_to_files(globs: &[String]) -> Result<Vec<PathBuf>> {
             let mut res = VecDeque::new();
             for path in glob::glob(glob).with_glob(glob)? {
                 let path = path?;
-                if path.metadata().with_path(&path)?.file_type().is_file() {
+                if path.symlink_metadata().with_path(&path)?.file_type().is_file() {
                     res.push_back(path);
                 }
             }
