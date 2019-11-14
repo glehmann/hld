@@ -14,7 +14,7 @@ custom_error! {pub Error
     // Io {source: io::Error} = "{source}",
     GlobPattern {source: glob::PatternError, glob: String} = "{glob}: {source}",
     Glob {source: glob::GlobError} = "{source}",
-    Cache {source: bincode::Error} = "{source}",
+    Cache {src: bincode::Error} = "{src}",
     Strategy {name: String} = "unsupported '{}' strategy",
     Logger {source: log::SetLoggerError} = "{source}",
     ThreadPool {source: rayon::ThreadPoolBuildError} = "{source}",
@@ -46,5 +46,11 @@ impl<T> ToGlobPatternErr<T> for result::Result<T, glob::PatternError> {
             source: e,
             glob: glob.to_owned(),
         })
+    }
+}
+
+impl From<bincode::Error> for Error {
+    fn from(err: bincode::Error) -> Error {
+        Error::Cache { src: err }
     }
 }
