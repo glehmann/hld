@@ -5,7 +5,7 @@ authors = ["Gaëtan Lehmann <gaetan.lehmann@gmail.com>", "Sylvain Joubert <joube
 edition = "2018"
 
 [dependencies]
-structopt = "0.3.4"
+structopt = "0.3.5"
 log = { version = "0.4", features = ["std"] }
 glob = "0.3.0"
 fs2 = "0.4.3"
