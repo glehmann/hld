@@ -56,7 +56,7 @@ dependencies = [
 
 [[package]]
 name = "assert_fs"
-version = "0.12.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "doc-comment 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -330,7 +330,7 @@ dependencies = [
  "ansi_term 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "app_dirs 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "assert_cmd 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "assert_fs 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "assert_fs 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "atty 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "blake2-rfc 0.2.18 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -980,7 +980,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum app_dirs 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e73a24bad9bd6a94d6395382a6c69fe071708ae4409f763c5475e14ee896313d"
 "checksum arrayvec 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)" = "92c7fb76bc8826a8b33b4ee5bb07a247a81e76764ab4d55e8f73e3a4d8808c71"
 "checksum assert_cmd 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2dc477793bd82ec39799b6f6b3df64938532fdf2ab0d49ef817eac65856a5a1e"
-"checksum assert_fs 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b7084b0e457e60fb397bc04195f4e74ff30ae5426be7a434d28e36adacd9f834"
+"checksum assert_fs 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)" = "815b47a19f74a89ba726736cdac88c9fba28a655b16ea01225adae328b26f1bf"
 "checksum atty 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)" = "1803c647a3ec87095e7ae7acfca019e98de5ec9a7d01343f611cf3152ed71a90"
 "checksum autocfg 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "a6d640bee2da49f60a4068a7fae53acde8982514ab7bae8b8cea9e88cbcfd799"
 "checksum bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b8ab639324e3ee8774d296864fbc0dbbb256cf1a41c490b94cba90c082915f92"
