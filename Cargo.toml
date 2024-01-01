@@ -20,7 +20,7 @@ directories = "5.0"
 reflink = "0.1"
 pretty-bytes = "0.2"
 filetime = "0.2"
-itertools = "0.8"
+itertools = "0.12"
 
 [dev-dependencies]
 assert_cmd = "0.11"
