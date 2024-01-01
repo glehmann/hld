@@ -1,4 +1,5 @@
 use crate::strategy::*;
+use directories::ProjectDirs;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -51,15 +52,10 @@ impl Config {
         let path = if let Some(ref path) = self.cache_path_opt {
             path.clone()
         } else {
-            let mut path = app_dirs::app_dir(
-                app_dirs::AppDataType::UserCache,
-                &app_dirs::AppInfo {
-                    name: "hld",
-                    author: "glehmann",
-                },
-                "",
-            )
-            .unwrap();
+            let mut path = ProjectDirs::from("com", "glehmann", "hld")
+                .unwrap()
+                .cache_dir()
+                .to_path_buf();
             path.push("digests");
             path
         };
