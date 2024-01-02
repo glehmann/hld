@@ -21,6 +21,7 @@ reflink = "0.1"
 pretty-bytes = "0.2"
 filetime = "0.2"
 itertools = "0.12"
+fs-err = "2.11.0"
 
 [dev-dependencies]
 assert_cmd = "0.11"

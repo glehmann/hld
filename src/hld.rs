@@ -4,13 +4,13 @@ use crate::strategy::Strategy;
 use bincode;
 use blake2_rfc::blake2b::Blake2b;
 use fs2::FileExt;
+use fs_err as fs;
 use itertools::chain;
 use rayon::prelude::*;
 use snafu::prelude::*;
 use std::collections::HashMap;
 use std::collections::VecDeque;
-use std::fs;
-use std::fs::File;
+use std::fs::{File, Metadata};
 use std::io;
 use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs as ufs;
@@ -26,7 +26,7 @@ type Digest = [u8; DIGEST_BYTES];
 /// compute the digest of a file
 fn file_digest(path: &Path) -> Result<Digest> {
     debug!("computing digest of {}", path.display());
-    let mut file = fs::File::open(&path).context(PathIo { path: &path })?;
+    let mut file = fs::File::open(&path)?;
     let mut hasher = Blake2b::new(DIGEST_BYTES);
     io::copy(&mut file, &mut hasher).context(PathIo { path: &path })?;
     let mut hash: Digest = Default::default();
@@ -57,7 +57,7 @@ fn find_file_duplicates<'a>(
     // get some metadata and filter out the empty files
     let mut path_inos: Vec<(&'a PathBuf, (u64, u64))> = Vec::new();
     for path in chain(caches, paths) {
-        let metadata = fs::metadata(path).context(PathIo { path: &path })?;
+        let metadata = fs::metadata(path)?;
         if metadata.len() > 0 {
             path_inos.push((path, inos_m(&metadata)));
         }
@@ -108,7 +108,7 @@ fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, D
     let cache: HashMap<PathBuf, Digest> = if config.clear_cache {
         hashmap! {}
     } else {
-        File::open(&config.cache_path())
+        fs::File::open(&config.cache_path())
             .ok()
             .map_or_else(HashMap::new, |reader| {
                 debug!("reading cache");
@@ -145,9 +145,7 @@ fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, D
     if updated {
         debug!("saving updated cache with {} entries", live_cache.len());
         if !config.dry_run {
-            let output_file = File::create(&config.cache_path()).context(PathIo {
-                path: &config.cache_path(),
-            })?;
+            let output_file = fs::File::create(&config.cache_path())?;
             bincode::serialize_into(io::BufWriter::new(&output_file), &live_cache)?;
         }
     }
@@ -180,7 +178,7 @@ pub fn hardlink_deduplicate(config: &Config, paths: &[PathBuf], caches: &[PathBu
 }
 
 fn file_hardlinks(config: &Config, path: &Path, hardlinks: &[&PathBuf]) -> Result<u64> {
-    let metadata = fs::metadata(path).context(PathIo { path: &path })?;
+    let metadata = fs::metadata(path)?;
     let inode = inos_m(&metadata);
     for hardlink in hardlinks {
         let hinode = inos(hardlink)?;
@@ -191,16 +189,14 @@ fn file_hardlinks(config: &Config, path: &Path, hardlinks: &[&PathBuf]) -> Resul
                 path.display(),
                 hardlink.display(),
             );
-            let dest_metadata = fs::metadata(hardlink).context(PathIo { path: hardlink })?;
+            let dest_metadata = fs::metadata(hardlink)?;
             if !config.dry_run {
-                std::fs::remove_file(hardlink).context(PathIo { path: hardlink })?;
+                fs::remove_file(hardlink)?;
                 match config.strategy {
                     Strategy::SymLink => {
                         ufs::symlink(path, hardlink).context(PathIo { path: &path })?
                     }
-                    Strategy::HardLink => {
-                        fs::hard_link(path, hardlink).context(PathIo { path: &path })?
-                    }
+                    Strategy::HardLink => fs::hard_link(path, hardlink)?,
                     Strategy::RefLink => {
                         reflink::reflink(path, hardlink).context(PathIo { path: &path })?
                     }
@@ -219,11 +215,11 @@ fn file_hardlinks(config: &Config, path: &Path, hardlinks: &[&PathBuf]) -> Resul
     Ok(metadata.len() * hardlinks.len() as u64)
 }
 
-fn restore_file_attributes(path: &Path, metadata: &fs::Metadata) -> Result<()> {
+fn restore_file_attributes(path: &Path, metadata: &Metadata) -> Result<()> {
     let atime = filetime::FileTime::from_last_access_time(metadata);
     let mtime = filetime::FileTime::from_last_modification_time(metadata);
     filetime::set_symlink_file_times(path, atime, mtime).context(PathIo { path: &path })?;
-    fs::set_permissions(path, metadata.permissions()).context(PathIo { path: &path })?;
+    fs::set_permissions(path, metadata.permissions())?;
     Ok(())
 }
 
@@ -257,6 +253,6 @@ fn inos(path: &Path) -> Result<(u64, u64)> {
     Ok(inos_m(&fs::metadata(path).context(PathIo { path: &path })?))
 }
 
-fn inos_m(metadata: &fs::Metadata) -> (u64, u64) {
+fn inos_m(metadata: &Metadata) -> (u64, u64) {
     (metadata.st_dev(), metadata.ino())
 }

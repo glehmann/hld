@@ -14,6 +14,8 @@ pub enum Error {
         glob: String,
     },
     #[snafu(context(false))]
+    Io { source: io::Error },
+    #[snafu(context(false))]
     Glob { source: glob::GlobError },
     #[snafu(context(false))]
     Cache { source: bincode::Error },
