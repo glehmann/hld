@@ -10,14 +10,16 @@ mod hld;
 mod strategy;
 
 use std::io;
-use structopt::StructOpt;
+
+use clap::{CommandFactory, Parser};
+use clap_complete::generate;
 
 fn run() -> error::Result<()> {
-    let args = cli::Config::from_args();
+    let args = cli::Config::parse();
     cli_logger::init(args.log_level)?;
 
     if let Some(shell) = args.completion {
-        cli::Config::clap().gen_completions_to("hld", shell, &mut io::stdout());
+        generate(shell, &mut cli::Config::command(), "hld", &mut io::stdout());
         std::process::exit(0);
     }
 

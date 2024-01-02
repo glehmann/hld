@@ -1,50 +1,51 @@
 use crate::strategy::*;
+use clap::Parser;
+use clap_complete::Shell;
 use directories::ProjectDirs;
 use std::path::PathBuf;
-use structopt::StructOpt;
 
 /// Hard Link Deduplicator
-#[derive(StructOpt, Debug)]
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
 pub struct Config {
     /// Files to process
-    #[structopt(name = "FILE")]
+    #[arg(name = "FILE")]
     pub files: Vec<String>,
 
     /// Files to cache
-    #[structopt(short = "-c", long = "cache", number_of_values = 1)]
+    #[arg(short = 'c', long = "cache", number_of_values = 1)]
     pub caches: Vec<String>,
 
     /// Cache file
-    #[structopt(short = "-C", long = "cache-path", parse(from_os_str))]
+    #[arg(short = 'C', long = "cache-path")]
     pub cache_path_opt: Option<PathBuf>,
 
     /// Clear the cache file
-    #[structopt(long = "clear-cache")]
+    #[arg(long = "clear-cache")]
     pub clear_cache: bool,
 
     /// Recursively find the files in the provided paths
-    #[structopt(short = "r", long = "recursive")]
+    #[arg(short = 'r', long = "recursive")]
     pub recursive: bool,
 
     /// Don't modify anything on the disk
-    #[structopt(short = "n", long = "dry-run")]
+    #[arg(short = 'n', long = "dry-run")]
     pub dry_run: bool,
 
     /// The linking strategy to use - either hardlink, symlink or reflink
-    #[structopt(short = "s", long = "strategy", default_value = "hardlink")]
+    #[arg(short = 's', long = "strategy", default_value = "hardlink")]
     pub strategy: Strategy,
 
     /// Parallelism level
-    #[structopt(short = "j", long = "parallel")]
+    #[arg(short = 'j', long = "parallel")]
     pub parallel: Option<usize>,
 
     /// Log level
-    #[structopt(short = "l", long = "log-level", default_value = "info")]
+    #[arg(short = 'l', long = "log-level", default_value = "info")]
     pub log_level: log::Level,
-
     /// Generate the completion code for this shell
-    #[structopt(long = "completion")]
-    pub completion: Option<structopt::clap::Shell>,
+    #[arg(long = "completion")]
+    pub completion: Option<Shell>,
 }
 
 impl Config {

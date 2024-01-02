@@ -28,7 +28,7 @@ fn bad_option() {
     hld!("--foo").failure().stdout(is_empty()).stderr(
         is_match(r"^error: .+ '--foo'")
             .unwrap()
-            .and(contains("USAGE:")),
+            .and(contains("Usage:")),
     );
 }
 
