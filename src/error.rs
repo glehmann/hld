@@ -1,29 +1,27 @@
-use glob::PatternError;
-use snafu::prelude::*;
 use std::io;
 use std::path::PathBuf;
 use std::result;
+use thiserror::Error;
 
-#[derive(Debug, Snafu)]
-#[snafu(visibility(pub))]
+#[derive(Debug, Error)]
 pub enum Error {
-    #[snafu(display("{}: {}", path.display(), source))]
+    #[error("unsupported '{name}' strategy")]
+    Strategy { name: String },
+    #[error("{path}: {source}")]
     PathIo { source: io::Error, path: PathBuf },
-    #[snafu(display("{glob}: {source}"))]
+    #[error("{glob}: {source}")]
     GlobPattern {
         source: glob::PatternError,
         glob: String,
     },
-    #[snafu(context(false))]
-    Glob { source: glob::GlobError },
-    #[snafu(context(false))]
-    Cache { source: bincode::Error },
-    #[snafu(display("unsupported '{name}' strategy"))]
-    Strategy { name: String },
-    #[snafu(context(false))]
-    Logger { source: log::SetLoggerError },
-    #[snafu(context(false))]
-    ThreadPool { source: rayon::ThreadPoolBuildError },
+    #[error(transparent)]
+    Glob(#[from] glob::GlobError),
+    #[error(transparent)]
+    Cache(#[from] bincode::Error),
+    #[error(transparent)]
+    Logger(#[from] log::SetLoggerError),
+    #[error(transparent)]
+    ThreadPool(#[from] rayon::ThreadPoolBuildError),
 }
 
 /// Alias for a `Result` with the error type `hld::Error`.
@@ -36,7 +34,10 @@ pub trait IOResultExt<T> {
 
 impl<T> IOResultExt<T> for io::Result<T> {
     fn path_ctx<P: Into<PathBuf>>(self, path: P) -> Result<T> {
-        self.context(PathIoSnafu { path })
+        self.map_err(|source| Error::PathIo {
+            source,
+            path: path.into(),
+        })
     }
 }
 
@@ -45,8 +46,11 @@ pub trait GlobResultExt<T> {
     fn glob_ctx<S: Into<String>>(self, glob: S) -> Result<T>;
 }
 
-impl<T> GlobResultExt<T> for result::Result<T, PatternError> {
+impl<T> GlobResultExt<T> for result::Result<T, glob::PatternError> {
     fn glob_ctx<S: Into<String>>(self, glob: S) -> Result<T> {
-        self.context(GlobPatternSnafu { glob })
+        self.map_err(|source| Error::GlobPattern {
+            source,
+            glob: glob.into(),
+        })
     }
 }
