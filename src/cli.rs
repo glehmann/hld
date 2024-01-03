@@ -13,7 +13,7 @@ pub struct Config {
     pub files: Vec<String>,
 
     /// Files to cache
-    #[arg(short, long = "cache", number_of_values = 1)]
+    #[arg(short, long = "cache")]
     pub caches: Vec<String>,
 
     /// Cache file
