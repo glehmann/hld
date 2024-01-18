@@ -459,12 +459,10 @@ dependencies = [
 
 [[package]]
 name = "hld"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
- "ansi_term",
  "assert_cmd",
  "assert_fs",
- "atty",
  "bincode",
  "blake2-rfc",
  "clap",
@@ -478,6 +476,7 @@ dependencies = [
  "lipsum",
  "log",
  "maplit",
+ "ocli",
  "predicates",
  "pretty-bytes",
  "rayon",
@@ -591,6 +590,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39e3200413f237f41ab11ad6d161bc7239c84dcb631773ccd7de3dfe4b5c267c"
 dependencies = [
  "autocfg 1.1.0",
+]
+
+[[package]]
+name = "ocli"
+version = "0.1.0"
+source = "git+https://github.com/glehmann/ocli.git#ebb8ff80edb6bc7f26c6d889d253d0d9b633f249"
+dependencies = [
+ "ansi_term",
+ "atty",
+ "log",
 ]
 
 [[package]]

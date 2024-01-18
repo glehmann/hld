@@ -10,8 +10,6 @@ glob = "0.3"
 fs2 = "0.4"
 rayon = "1.0"
 maplit = "1.0"
-ansi_term = "0.12"
-atty = "0.2"
 bincode = "1.2"
 blake2-rfc = "0.2"
 directories = "5.0"
@@ -22,6 +20,7 @@ itertools = "0.12"
 thiserror = "1.0.56"
 clap = { version = "4.4.12", features = ["derive"] }
 clap_complete = "4.4.5"
+ocli = { git = "https://github.com/glehmann/ocli.git" }
 
 [dev-dependencies]
 assert_cmd = "0.11"

@@ -4,7 +4,6 @@ extern crate log;
 extern crate maplit;
 
 mod cli;
-mod cli_logger;
 mod error;
 mod hld;
 mod strategy;
@@ -16,7 +15,7 @@ use clap_complete::generate;
 
 fn run() -> error::Result<()> {
     let args = cli::Config::parse();
-    cli_logger::init(args.log_level)?;
+    ocli::init(args.log_level)?;
 
     if let Some(shell) = args.completion {
         generate(shell, &mut cli::Config::command(), "hld", &mut io::stdout());
