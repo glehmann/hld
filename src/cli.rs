@@ -43,6 +43,7 @@ pub struct Config {
     /// Log level
     #[arg(short = 'l', long, default_value = "info")]
     pub log_level: log::Level,
+
     /// Generate the completion code for this shell
     #[arg(long)]
     pub completion: Option<Shell>,

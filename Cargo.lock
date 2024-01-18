@@ -595,7 +595,8 @@ dependencies = [
 [[package]]
 name = "ocli"
 version = "0.1.0"
-source = "git+https://github.com/glehmann/ocli.git#ebb8ff80edb6bc7f26c6d889d253d0d9b633f249"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffd2eceb0ba04d1ebca6bd8e982915192f0d7e2ab83410dc1dfd676e0e702878"
 dependencies = [
  "ansi_term",
  "atty",
