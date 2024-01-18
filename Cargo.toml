@@ -1,6 +1,6 @@
 [package]
 name = "hld"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Gaëtan Lehmann <gaetan.lehmann@gmail.com>", "Sylvain Joubert <joubert.sy@gmail.com>"]
 edition = "2018"
 
