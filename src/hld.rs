@@ -11,7 +11,6 @@ use std::collections::VecDeque;
 use std::fs;
 use std::fs::File;
 use std::io;
-use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs as ufs;
 use std::os::unix::fs::MetadataExt;
 use std::path::Path;
@@ -247,5 +246,5 @@ fn inos(path: &Path) -> Result<(u64, u64)> {
 }
 
 fn inos_m(metadata: &fs::Metadata) -> (u64, u64) {
-    (metadata.st_dev(), metadata.ino())
+    (metadata.dev(), metadata.ino())
 }

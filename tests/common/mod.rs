@@ -1,5 +1,4 @@
 use std::fs;
-use std::os::linux::fs::MetadataExt as LinuxMetadataExt;
 use std::os::unix::fs::MetadataExt;
 
 pub trait TestPathChild {
@@ -32,7 +31,7 @@ impl TestToString for assert_fs::TempDir {
 #[allow(dead_code)]
 pub fn inos(path: &assert_fs::fixture::ChildPath) -> (u64, u64) {
     let metadata = fs::metadata(path.path()).unwrap();
-    (metadata.st_dev(), metadata.ino())
+    (metadata.dev(), metadata.ino())
 }
 
 #[cfg(not(feature = "kcov"))]
