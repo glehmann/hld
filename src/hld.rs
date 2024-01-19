@@ -98,6 +98,8 @@ fn find_file_duplicates<'a>(
 
 fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, Digest>> {
     // locking the cache
+    let cache_dir = config.cache_path().parent().unwrap().to_owned();
+    fs::create_dir_all(&cache_dir).path_ctx(&cache_dir)?;
     let lock_path = config.cache_path().with_extension("lock");
     let lock_file = File::create(&lock_path).path_ctx(&lock_path)?;
     lock_file.lock_exclusive().path_ctx(&lock_path)?;
