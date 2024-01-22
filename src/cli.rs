@@ -65,3 +65,9 @@ impl Config {
         path
     }
 }
+
+#[test]
+fn verify_cli() {
+    use clap::CommandFactory;
+    Config::command().debug_assert()
+}
