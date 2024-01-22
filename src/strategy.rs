@@ -1,7 +1,10 @@
+use clap::ValueEnum;
+
 use crate::error::*;
 use std::str::FromStr;
 
-#[derive(Debug, Eq, PartialEq, Copy)]
+#[derive(Debug, Eq, PartialEq, Copy, ValueEnum)]
+#[value(rename_all = "lowercase")]
 pub enum Strategy {
     HardLink,
     SymLink,

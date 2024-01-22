@@ -33,7 +33,7 @@ pub struct Config {
     pub dry_run: bool,
 
     /// The linking strategy to use - either hardlink, symlink or reflink
-    #[arg(short, long, default_value = "hardlink")]
+    #[arg(short, long, default_value_t = Strategy::HardLink)]
     pub strategy: Strategy,
 
     /// Parallelism level

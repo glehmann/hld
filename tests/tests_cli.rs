@@ -37,7 +37,9 @@ fn bad_strategy() {
     hld!("--strategy", "dumb")
         .failure()
         .stdout(is_empty())
-        .stderr(contains(r"unsupported 'dumb' strategy"));
+        .stderr(contains(
+            r"invalid value 'dumb' for '--strategy <STRATEGY>'",
+        ));
 }
 
 #[test]
