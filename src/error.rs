@@ -5,8 +5,6 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("unsupported '{name}' strategy")]
-    Strategy { name: String },
     #[error("{path}: {source}")]
     PathIo { source: io::Error, path: PathBuf },
     #[error("{glob}: {source}")]
