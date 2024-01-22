@@ -15,7 +15,7 @@ use clap_complete::generate;
 
 fn run() -> error::Result<()> {
     let args = cli::Config::parse();
-    ocli::init(args.log_level)?;
+    ocli::init(args.log_level.to_owned().into())?;
 
     if let Some(shell) = args.completion {
         generate(shell, &mut cli::Config::command(), "hld", &mut io::stdout());

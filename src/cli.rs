@@ -1,8 +1,9 @@
 use crate::strategy::*;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use clap_complete::Shell;
 use directories::ProjectDirs;
 use std::path::PathBuf;
+use strum::Display;
 
 /// Hard Link Deduplicator
 #[derive(Parser, Debug)]
@@ -41,12 +42,34 @@ pub struct Config {
     pub parallel: Option<usize>,
 
     /// Log level
-    #[arg(short = 'l', long, default_value = "info")]
-    pub log_level: log::Level,
+    #[arg(short = 'l', long, default_value_t = Level::Info)]
+    pub log_level: Level,
 
     /// Generate the completion code for this shell
     #[arg(long)]
     pub completion: Option<Shell>,
+}
+
+#[derive(ValueEnum, Clone, Debug, Display)]
+#[strum(serialize_all = "lowercase")]
+pub enum Level {
+    Trace,
+    Debug,
+    Info,
+    Warn,
+    Error,
+}
+
+impl From<Level> for log::Level {
+    fn from(v: Level) -> log::Level {
+        match v {
+            Level::Trace => log::Level::Trace,
+            Level::Debug => log::Level::Debug,
+            Level::Info => log::Level::Info,
+            Level::Warn => log::Level::Warn,
+            Level::Error => log::Level::Error,
+        }
+    }
 }
 
 impl Config {
