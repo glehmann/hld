@@ -18,7 +18,7 @@ pub struct Config {
     pub caches: Vec<String>,
 
     /// Cache file
-    #[arg(short = 'C', long)]
+    #[arg(short = 'C', long, env = "HLD_CACHE_PATH")]
     pub cache_path: Option<PathBuf>,
 
     /// Clear the cache file
@@ -26,7 +26,7 @@ pub struct Config {
     pub clear_cache: bool,
 
     /// Recursively find the files in the provided paths
-    #[arg(short, long)]
+    #[arg(short, long, env = "HLD_RECURSIVE")]
     pub recursive: bool,
 
     /// Don't modify anything on the disk
@@ -34,15 +34,15 @@ pub struct Config {
     pub dry_run: bool,
 
     /// The linking strategy to use - either hardlink, symlink or reflink
-    #[arg(short, long, default_value_t = Strategy::HardLink)]
+    #[arg(short, long, default_value_t = Strategy::HardLink, env = "HLD_STRATEGY")]
     pub strategy: Strategy,
 
     /// Parallelism level
-    #[arg(short = 'j', long)]
+    #[arg(short = 'j', long, env = "HLD_PARALLEL")]
     pub parallel: Option<usize>,
 
     /// Log level
-    #[arg(short = 'l', long, default_value_t = Level::Info)]
+    #[arg(short = 'l', long, default_value_t = Level::Info, env = "HLD_LOG_LEVEL")]
     pub log_level: Level,
 
     /// Generate the completion code for this shell
