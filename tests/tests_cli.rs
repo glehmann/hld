@@ -1,6 +1,7 @@
 mod common;
 
 use assert_cmd::prelude::*;
+use common::setup_cache_dir;
 use predicates::prelude::predicate::str::*;
 use predicates::prelude::*;
 use std::process::Command;
@@ -44,6 +45,7 @@ fn bad_strategy() {
 
 #[test]
 fn log_level_error() {
+    let _cache_dir = setup_cache_dir();
     hld!("--log-level", "error")
         .success()
         .stdout(is_empty())
@@ -52,6 +54,7 @@ fn log_level_error() {
 
 #[test]
 fn log_level_info() {
+    let _cache_dir = setup_cache_dir();
     hld!("--log-level", "info")
         .success()
         .stdout(is_empty())
@@ -65,6 +68,7 @@ fn log_level_info() {
 
 #[test]
 fn log_level_debug() {
+    let _cache_dir = setup_cache_dir();
     hld!("--log-level", "debug")
         .success()
         .stdout(is_empty())
@@ -78,6 +82,7 @@ fn log_level_debug() {
 
 #[test]
 fn log_level_trace() {
+    let _cache_dir = setup_cache_dir();
     hld!("--log-level", "trace")
         .success()
         .stdout(is_empty())

@@ -1,6 +1,13 @@
 use std::fs;
 use std::os::unix::fs::MetadataExt;
 
+#[allow(dead_code)]
+pub fn setup_cache_dir() -> assert_fs::TempDir {
+    let cache = assert_fs::TempDir::new().unwrap();
+    std::env::set_var("HLD_CACHE_PATH", cache.path().join("digests"));
+    cache
+}
+
 pub trait TestPathChild {
     fn mkdir_all(&self) -> std::io::Result<()>;
 }

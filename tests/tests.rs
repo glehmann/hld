@@ -15,6 +15,7 @@ use std::string::ToString;
 
 #[test]
 fn empty_run() {
+    let _cache_dir = setup_cache_dir();
     hld!()
         .success()
         .stdout(is_empty())
@@ -23,6 +24,7 @@ fn empty_run() {
 
 #[test]
 fn parallel() {
+    let _cache_dir = setup_cache_dir();
     hld!("--log-level", "debug", "--parallel", "5")
         .success()
         .stdout(is_empty())
@@ -41,6 +43,7 @@ fn invalid_glob() {
 
 #[test]
 fn deduplication() {
+    let _cache_dir = setup_cache_dir();
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
@@ -101,6 +104,7 @@ fn dryrun() {
 
 #[test]
 fn unreadable_file() {
+    let _cache_dir = setup_cache_dir();
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
@@ -120,6 +124,7 @@ fn unreadable_file() {
 
 #[test]
 fn no_deduplication_different_files() {
+    let _cache_dir = setup_cache_dir();
     let tmp = assert_fs::TempDir::new().unwrap();
     let foo = tmp.child("foo.txt");
     let bar = tmp.child("bar.txt");
@@ -138,6 +143,7 @@ fn no_deduplication_different_files() {
 
 #[test]
 fn no_deduplication_empty_files() {
+    let _cache_dir = setup_cache_dir();
     let tmp = assert_fs::TempDir::new().unwrap();
     let foo = tmp.child("foo.txt");
     let bar = tmp.child("bar.txt");
@@ -283,6 +289,7 @@ fn clear_cache() {
 
 #[test]
 fn recursive() {
+    let _cache_dir = setup_cache_dir();
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
@@ -308,6 +315,7 @@ fn recursive() {
 
 #[test]
 fn symlinking() {
+    let _cache_dir = setup_cache_dir();
     let lorem_ipsum = lipsum(100);
     // set up the test dir
     let tmp = assert_fs::TempDir::new().unwrap();
