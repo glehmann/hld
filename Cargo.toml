@@ -24,10 +24,10 @@ ocli = "0.1.0"
 strum = { version = "0.25.0", features = ["derive"] }
 
 [dev-dependencies]
-assert_cmd = "0.11"
-predicates = "1.0"
-assert_fs = "0.12"
-lipsum = "0.6"
+assert_cmd = "2.0"
+predicates = "3.1"
+assert_fs = "1.1"
+lipsum = "0.9"
 escargot = "0.5"
 
 [features]
