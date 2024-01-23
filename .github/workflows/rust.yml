@@ -24,6 +24,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: cargo build
+      run: cargo build --release
     - name: Run tests
-      run: cargo test
+      run: cargo test --release
