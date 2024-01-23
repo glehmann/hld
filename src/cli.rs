@@ -18,8 +18,8 @@ pub struct Config {
     pub caches: Vec<String>,
 
     /// Cache file
-    #[arg(short = 'C', long, env = "HLD_CACHE_PATH")]
-    pub cache_path: Option<PathBuf>,
+    #[arg(short = 'C', long, default_value = defaut_cache_path().into_os_string(), env = "HLD_CACHE_PATH")]
+    pub cache_path: PathBuf,
 
     /// Clear the cache file
     #[arg(long)]
@@ -72,21 +72,13 @@ impl From<Level> for log::Level {
     }
 }
 
-impl Config {
-    pub fn cache_path(self: &Self) -> PathBuf {
-        let path = if let Some(ref path) = self.cache_path {
-            path.clone()
-        } else {
-            let mut path = ProjectDirs::from("com", "glehmann", "hld")
-                .unwrap()
-                .cache_dir()
-                .to_path_buf();
-            path.push("digests");
-            path
-        };
-        debug!("cache path: {}", path.display());
-        path
-    }
+pub fn defaut_cache_path() -> PathBuf {
+    let mut path = ProjectDirs::from("com", "glehmann", "hld")
+        .unwrap()
+        .cache_dir()
+        .to_path_buf();
+    path.push("digests");
+    path
 }
 
 #[test]

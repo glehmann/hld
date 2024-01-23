@@ -97,16 +97,16 @@ fn find_file_duplicates<'a>(
 
 fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, Digest>> {
     // locking the cache
-    let cache_dir = config.cache_path().parent().unwrap().to_owned();
+    let cache_dir = config.cache_path.parent().unwrap().to_owned();
     fs::create_dir_all(&cache_dir).path_ctx(&cache_dir)?;
-    let lock_path = config.cache_path().with_extension("lock");
+    let lock_path = config.cache_path.with_extension("lock");
     let lock_file = File::create(&lock_path).path_ctx(&lock_path)?;
     lock_file.lock_exclusive().path_ctx(&lock_path)?;
 
     let cache: HashMap<PathBuf, Digest> = if config.clear_cache {
         hashmap! {}
     } else {
-        File::open(&config.cache_path())
+        File::open(&config.cache_path)
             .ok()
             .map_or_else(HashMap::new, |reader| {
                 debug!("reading cache");
@@ -143,13 +143,13 @@ fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, D
     if updated {
         debug!("saving updated cache with {} entries", live_cache.len());
         if !config.dry_run {
-            let output_file = File::create(&config.cache_path()).path_ctx(config.cache_path())?;
+            let output_file = File::create(&config.cache_path).path_ctx(&config.cache_path)?;
             bincode::serialize_into(io::BufWriter::new(&output_file), &live_cache)?;
         }
     }
 
     // unlock the cache
-    lock_file.unlock().path_ctx(config.cache_path())?;
+    lock_file.unlock().path_ctx(&config.cache_path)?;
 
     Ok(new_digests)
 }
