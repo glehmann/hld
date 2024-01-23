@@ -143,6 +143,9 @@ jobs:
     - name: Build hld and all crates
       run: ${{ env.CARGO }} build --workspace ${{ env.TARGET_FLAGS }} --release
 
+    - name: Show the help message
+      run: ${{ env.CARGO }} run ${{ env.TARGET_FLAGS }} --release -- --help
+
     - name: Run tests
       run: ${{ env.CARGO }} test --workspace ${{ env.TARGET_FLAGS }} --release
 
