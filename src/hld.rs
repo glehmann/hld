@@ -191,7 +191,7 @@ fn file_hardlinks(config: &Config, path: &Path, hardlinks: &[&PathBuf]) -> Resul
                 match config.strategy {
                     Strategy::SymLink => ufs::symlink(path, hardlink).path_ctx(path)?,
                     Strategy::HardLink => fs::hard_link(path, hardlink).path_ctx(path)?,
-                    Strategy::RefLink => reflink::reflink(path, hardlink).path_ctx(path)?,
+                    Strategy::RefLink => reflink_copy::reflink(path, hardlink).path_ctx(path)?,
                 }
                 restore_file_attributes(hardlink, &dest_metadata)?;
             }
