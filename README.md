@@ -19,8 +19,7 @@ sys 0.22
 
 420MB — 46% of the build directory size — saved in just 0.5 seconds :-)
 
-[![Travis Status](https://api.travis-ci.com/glehmann/hld.svg?branch=master)](https://travis-ci.com/glehmann/hld)
-[![codecov Status](https://codecov.io/gh/glehmann/hld/branch/master/graph/badge.svg)](https://codecov.io/gh/glehmann/hld)
+[![CI Status](https://github.com/glehmann/hld/actions/workflows/ci.yml/badge.svg)]([text](https://github.com/glehmann/hld/actions))
 
 Features
 --------
