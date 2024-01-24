@@ -41,13 +41,26 @@ pub fn inos(path: &assert_fs::fixture::ChildPath) -> (u64, u64) {
     (metadata.dev(), metadata.ino())
 }
 
+#[macro_export]
+macro_rules! cargo_bin {
+    ( $name:expr ) => {
+        env!(concat!("CARGO_BIN_EXE_", $name))
+    };
+}
+
 #[cfg(not(feature = "kcov"))]
 #[macro_export]
 macro_rules! hld {
     ( $( $v:expr ),* ) => (
         {
             let temp_vec: Vec<String> = vec![$($v.to_string(),)*];
-            Command::cargo_bin("hld").unwrap().args(&temp_vec).assert()
+            let runner_env = format!("CARGO_TARGET_{}_RUNNER", escargot::CURRENT_TARGET.replace("-", "_").to_uppercase());
+            if let Ok(runner) = std::env::var(runner_env) {
+                let runner_vec: Vec<_> = runner.split(" ").collect();
+                Command::new(runner_vec[0]).args(&runner_vec[1..]).arg(cargo_bin!("hld")).args(&temp_vec).assert()
+            } else {
+                Command::new(cargo_bin!("hld")).args(&temp_vec).assert()
+            }
         }
     );
 }
