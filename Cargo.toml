@@ -11,7 +11,6 @@ fs2 = "0.4"
 rayon = "1.0"
 maplit = "1.0"
 bincode = "1.2"
-blake2-rfc = "0.2"
 directories = "5.0"
 reflink-copy = "0.1"
 pretty-bytes = "0.2"
@@ -22,6 +21,7 @@ clap = { version = "4.4.12", features = ["derive", "env", "string", "wrap_help"]
 clap_complete = "4.4.5"
 ocli = "0.1.0"
 strum = { version = "0.25.0", features = ["derive"] }
+blake3 = { version = "1.5.0", features = ["serde"] }
 
 [dev-dependencies]
 assert_cmd = "2.0"
@@ -32,7 +32,6 @@ escargot = "0.5"
 
 [features]
 kcov = []
-simd = ["blake2-rfc/simd_opt"]
 
 [profile.release]
 strip = "symbols"

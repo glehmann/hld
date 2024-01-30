@@ -24,7 +24,7 @@ sys 0.22
 Features
 --------
 
-It works with all the available core by default and uses the [BLAKE2](https://blake2.net/)
+It works with all the available core by default and uses the [BLAKE3](https://blake3.io/)
 hashing function in order to be both very fast and with an extremely low
 chance of collision.
 
@@ -57,7 +57,7 @@ files contained there.
 #### caching
 
 In addition to the raw globs of the previous chapter, some cached globs may
-be used. They act all the same than the raw globs, but their BLAKE2 digest
+be used. They act all the same than the raw globs, but their BLAKE3 digest
 value is saved for a latter reuse. They must be used on files that are
 guarenteed to *not* change. Cached globs are passed with a `--cache`,
 or `-c` option.
@@ -166,13 +166,6 @@ $ cargo build --release
 ...
 $ ./target/release/hld --version
 hld 0.1.0
-```
-
-`hld` can be made approximately 15% faster by using rust nightly and the
-`simd` feature:
-
-```
-$ cargo +nightly --features simd build --release
 ```
 
 Testing

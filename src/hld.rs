@@ -2,7 +2,7 @@ use crate::cli::*;
 use crate::error::{GlobResultExt, IOResultExt, Result};
 use crate::strategy::Strategy;
 use bincode;
-use blake2_rfc::blake2b::Blake2b;
+use blake3::{Hash, Hasher};
 use fs2::FileExt;
 use itertools::chain;
 use rayon::prelude::*;
@@ -18,18 +18,13 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::vec::Vec;
 
-const DIGEST_BYTES: usize = 32;
-type Digest = [u8; DIGEST_BYTES];
-
 /// compute the digest of a file
-fn file_digest(path: &Path) -> Result<Digest> {
+fn file_digest(path: &Path) -> Result<Hash> {
     debug!("computing digest of {}", path.display());
     let mut file = fs::File::open(&path).path_ctx(path)?;
-    let mut hasher = Blake2b::new(DIGEST_BYTES);
+    let mut hasher = Hasher::new();
     io::copy(&mut file, &mut hasher).path_ctx(path)?;
-    let mut hash: Digest = Default::default();
-    hash.copy_from_slice(hasher.finalize().as_bytes());
-    Ok(hash)
+    Ok(hasher.finalize())
 }
 
 // /// print the file digests
@@ -64,8 +59,8 @@ fn find_file_duplicates<'a>(
     // compute the digests
     let digests = path_inos
         .par_iter()
-        .map(|(path, inode)| -> Result<(&'a PathBuf, Digest)> {
-            let ino_digest: Option<Digest> = ino_map.lock().unwrap().get(inode).copied();
+        .map(|(path, inode)| -> Result<(&'a PathBuf, Hash)> {
+            let ino_digest: Option<Hash> = ino_map.lock().unwrap().get(inode).copied();
             let digest = if let Some(digest) = ino_digest {
                 digest
             } else {
@@ -79,7 +74,7 @@ fn find_file_duplicates<'a>(
             };
             Ok((path, digest))
         })
-        .collect::<Result<Vec<(&'a PathBuf, Digest)>>>()?;
+        .collect::<Result<Vec<(&'a PathBuf, Hash)>>>()?;
 
     // merge the digests in a hashmap
     let mut res = hashmap! {};
@@ -95,7 +90,7 @@ fn find_file_duplicates<'a>(
         .collect())
 }
 
-fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, Digest>> {
+fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, Hash>> {
     // locking the cache
     let cache_dir = config.cache_path.parent().unwrap().to_owned();
     fs::create_dir_all(&cache_dir).path_ctx(&cache_dir)?;
@@ -103,7 +98,7 @@ fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, D
     let lock_file = File::create(&lock_path).path_ctx(&lock_path)?;
     lock_file.lock_exclusive().path_ctx(&lock_path)?;
 
-    let cache: HashMap<PathBuf, Digest> = if config.clear_cache {
+    let cache: HashMap<PathBuf, Hash> = if config.clear_cache {
         hashmap! {}
     } else {
         File::open(&config.cache_path)
