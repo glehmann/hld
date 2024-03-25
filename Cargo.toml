@@ -20,7 +20,7 @@ thiserror = "1.0.56"
 clap = { version = "4.4.12", features = ["derive", "env", "string", "wrap_help"] }
 clap_complete = "4.4.5"
 ocli = "0.1.0"
-strum = { version = "0.25.0", features = ["derive"] }
+strum = { version = "0.26.2", features = ["derive"] }
 blake3 = { version = "1.5.0", features = ["serde"] }
 
 [dev-dependencies]
