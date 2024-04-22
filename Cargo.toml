@@ -16,7 +16,7 @@ reflink-copy = "0.1"
 pretty-bytes = "0.2"
 filetime = "0.2"
 itertools = "0.12"
-thiserror = "1.0.56"
+thiserror = "1.0.59"
 clap = { version = "4.5.4", features = ["derive", "env", "string", "wrap_help"] }
 clap_complete = "4.5.1"
 ocli = "0.1.0"
