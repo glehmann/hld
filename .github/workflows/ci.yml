@@ -68,7 +68,7 @@ jobs:
             rust: nightly
 
           # release platforms
-          # same targets as in release.yml, all the linux targets from docker.yml
+          # same targets as in release.yml
           - build: linux-amd64
             os: ubuntu-latest
             rust: stable
@@ -101,10 +101,10 @@ jobs:
             os: macos-14
             rust: stable
             target: aarch64-apple-darwin
-          - build: windows-amd64
-            os: windows-latest
-            rust: stable
-            target: x86_64-pc-windows-msvc
+          # - build: windows-amd64
+          #   os: windows-latest
+          #   rust: stable
+          #   target: x86_64-pc-windows-msvc
 
           # other usual build targets
           - build: stable-x86
@@ -127,9 +127,9 @@ jobs:
             os: ubuntu-latest
             rust: stable
             target: armv7-unknown-linux-musleabi
-          - build: win-gnu
-            os: windows-2022
-            rust: nightly-x86_64-gnu
+          # - build: win-gnu
+          #   os: windows-2022
+          #   rust: nightly-x86_64-gnu
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
