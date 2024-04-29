@@ -2,7 +2,14 @@
 name = "hld"
 version = "0.3.0"
 authors = ["Gaëtan Lehmann <gaetan.lehmann@gmail.com>", "Sylvain Joubert <joubert.sy@gmail.com>"]
-edition = "2018"
+edition = "2021"
+description = "Hard Link Deduplicator"
+readme = "README.md"
+repository = "https://github.com/glehmann/hld.git"
+homepage = "https://github.com/glehmann/hld/"
+documentation = "https://github.com/glehmann/hld/"
+license = "MIT"
+keywords = ["cli", "deduplication"]
 
 [dependencies]
 log = { version = "0.4", features = ["std"] }
