@@ -170,10 +170,9 @@ jobs:
     - name: Creating directory for archive
       shell: bash
       run: |
-        mkdir -p "$ARCHIVE"/{complete,doc}
+        mkdir -p "$ARCHIVE"
         cp "$BIN" "$ARCHIVE"/
         cp {README.md,LICENSE} "$ARCHIVE"/
-        cp doc/* "$ARCHIVE"/doc/
 
     - name: Build archive (Windows)
       shell: bash
