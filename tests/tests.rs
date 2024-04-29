@@ -1,3 +1,4 @@
+#![allow(clippy::disallowed_names)]
 mod common;
 
 use crate::common::*;

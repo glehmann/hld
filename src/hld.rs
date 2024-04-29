@@ -1,7 +1,6 @@
 use crate::cli::*;
 use crate::error::{GlobResultExt, IOResultExt, Result};
 use crate::strategy::Strategy;
-use bincode;
 use blake3::{Hash, Hasher};
 use fs2::FileExt;
 use itertools::chain;
@@ -21,7 +20,7 @@ use std::vec::Vec;
 /// compute the digest of a file
 fn file_digest(path: &Path) -> Result<Hash> {
     debug!("computing digest of {}", path.display());
-    let mut file = fs::File::open(&path).path_ctx(path)?;
+    let mut file = fs::File::open(path).path_ctx(path)?;
     let mut hasher = Hasher::new();
     io::copy(&mut file, &mut hasher).path_ctx(path)?;
     Ok(hasher.finalize())
@@ -155,7 +154,7 @@ pub fn hardlink_deduplicate(config: &Config, paths: &[PathBuf], caches: &[PathBu
     let mut dedup_size: u64 = 0;
     let mut dedup_files: usize = 0;
     for dup in dups {
-        dedup_size += file_hardlinks(config, &dup[0], &dup[1..])?;
+        dedup_size += file_hardlinks(config, dup[0], &dup[1..])?;
         dedup_files += dup.len() - 1;
     }
     debug!("{} bytes saved", dedup_size);
@@ -229,7 +228,7 @@ pub fn glob_to_files(globs: &[String]) -> Result<Vec<PathBuf>> {
             Ok(res)
         })
         .collect::<Result<Vec<VecDeque<PathBuf>>>>()?;
-    let mut res: Vec<PathBuf> = res.iter().cloned().flatten().collect();
+    let mut res: Vec<PathBuf> = res.iter().flatten().cloned().collect();
     res.par_sort();
     res.dedup();
     Ok(res)
