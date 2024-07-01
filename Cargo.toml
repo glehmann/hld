@@ -24,7 +24,7 @@ pretty-bytes = "0.2"
 filetime = "0.2"
 itertools = "0.12"
 thiserror = "1.0.59"
-clap = { version = "4.5.4", features = ["derive", "env", "string", "wrap_help"] }
+clap = { version = "4.5.8", features = ["derive", "env", "string", "wrap_help"] }
 clap_complete = "4.5.2"
 ocli = "0.1.0"
 strum = { version = "0.26.2", features = ["derive"] }
