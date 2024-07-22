@@ -28,7 +28,7 @@ clap = { version = "4.5.8", features = ["derive", "env", "string", "wrap_help"] 
 clap_complete = "4.5.8"
 ocli = "0.1.0"
 strum = { version = "0.26.3", features = ["derive"] }
-blake3 = { version = "1.5.1", features = ["serde"] }
+blake3 = { version = "1.5.3", features = ["serde"] }
 
 [dev-dependencies]
 assert_cmd = "2.0"
