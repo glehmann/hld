@@ -25,7 +25,7 @@ filetime = "0.2"
 itertools = "0.13"
 thiserror = "1.0.63"
 clap = { version = "4.5.11", features = ["derive", "env", "string", "wrap_help"] }
-clap_complete = "4.5.8"
+clap_complete = "4.5.12"
 ocli = "0.1.0"
 strum = { version = "0.26.3", features = ["derive"] }
 blake3 = { version = "1.5.3", features = ["serde"] }
