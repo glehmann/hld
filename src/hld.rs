@@ -143,7 +143,7 @@ fn update_cache(config: &Config, paths: &[PathBuf]) -> Result<HashMap<PathBuf, H
     }
 
     // unlock the cache
-    lock_file.unlock().path_ctx(&config.cache_path)?;
+    FileExt::unlock(&lock_file).path_ctx(&config.cache_path)?;
 
     Ok(new_digests)
 }
