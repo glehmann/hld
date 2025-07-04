@@ -157,8 +157,8 @@ pub fn hardlink_deduplicate(config: &Config, paths: &[PathBuf], caches: &[PathBu
         dedup_size += file_hardlinks(config, dup[0], &dup[1..])?;
         dedup_files += dup.len() - 1;
     }
-    debug!("{} bytes saved", dedup_size);
-    debug!("{} files deduplicated", dedup_files);
+    debug!("{dedup_size} bytes saved");
+    debug!("{dedup_files} files deduplicated");
     info!(
         "{} saved in the deduplication of {} files",
         pretty_bytes::converter::convert(dedup_size as f64),

@@ -23,33 +23,33 @@ fn run() -> error::Result<()> {
     }
 
     if let Some(parallel) = args.parallel {
-        debug!("using {} threads at most", parallel);
+        debug!("using {parallel} threads at most");
         rayon::ThreadPoolBuilder::new()
             .num_threads(parallel)
             .build_global()?;
     }
 
     let file_globs = if args.recursive {
-        args.files.iter().map(|d| format!("{}/**/*", d)).collect()
+        args.files.iter().map(|d| format!("{d}/**/*")).collect()
     } else {
         args.files.clone()
     };
     let cache_globs = if args.recursive {
-        args.caches.iter().map(|d| format!("{}/**/*", d)).collect()
+        args.caches.iter().map(|d| format!("{d}/**/*")).collect()
     } else {
         args.caches.clone()
     };
     let files = hld::glob_to_files(&file_globs)?;
     let caches = hld::glob_to_files(&cache_globs)?;
-    trace!("files: {:?}", files);
-    trace!("caches: {:?}", caches);
+    trace!("files: {files:?}");
+    trace!("caches: {caches:?}");
     hld::hardlink_deduplicate(&args, &files, &caches)?;
     Ok(())
 }
 
 fn main() {
     if let Err(err) = run() {
-        error!("{}", err);
+        error!("{err}");
         std::process::exit(1);
     }
 }
