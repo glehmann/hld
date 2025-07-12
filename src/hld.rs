@@ -2,6 +2,7 @@ use crate::cli::*;
 use crate::error::{GlobResultExt, IOResultExt, Result};
 use crate::strategy::Strategy;
 use blake3::{Hash, Hasher};
+use file_id::*;
 use fs2::FileExt;
 use itertools::chain;
 use rayon::prelude::*;
@@ -10,8 +11,6 @@ use std::collections::VecDeque;
 use std::fs;
 use std::fs::File;
 use std::io;
-use std::os::unix::fs as ufs;
-use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -47,11 +46,11 @@ fn find_file_duplicates<'a>(
     let cache = update_cache(config, caches)?;
 
     // get some metadata and filter out the empty files
-    let mut path_inos: Vec<(&'a PathBuf, (u64, u64))> = Vec::new();
+    let mut path_inos: Vec<(&'a PathBuf, FileId)> = Vec::new();
     for path in chain(caches, paths) {
         let metadata = fs::metadata(path).path_ctx(path)?;
         if metadata.len() > 0 {
-            path_inos.push((path, inos_m(&metadata)));
+            path_inos.push((path, get_file_id(path).path_ctx(path)?));
         }
     }
 
@@ -167,12 +166,39 @@ pub fn hardlink_deduplicate(config: &Config, paths: &[PathBuf], caches: &[PathBu
     Ok(())
 }
 
+#[cfg(unix)]
+fn crossplatform_symlink(path: &Path, hardlink: &Path) -> std::io::Result<()> {
+    std::os::unix::fs::symlink(path, hardlink)
+}
+
+#[cfg(windows)]
+fn crossplatform_symlink(path: &Path, hardlink: &Path) -> std::io::Result<()> {
+    std::os::windows::fs::symlink_file(path, hardlink)
+}
+
+fn get_device_id(file_id: FileId) -> u64 {
+    match file_id {
+        FileId::Inode {
+            device_id,
+            inode_number: _,
+        } => device_id,
+        FileId::LowRes {
+            volume_serial_number,
+            file_index: _,
+        } => volume_serial_number as u64,
+        FileId::HighRes {
+            volume_serial_number,
+            file_id: _,
+        } => volume_serial_number,
+    }
+}
+
 fn file_hardlinks(config: &Config, path: &Path, hardlinks: &[&PathBuf]) -> Result<u64> {
     let metadata = fs::metadata(path).path_ctx(path)?;
-    let inode = inos_m(&metadata);
+    let inode = get_file_id(path).path_ctx(path)?;
     for hardlink in hardlinks {
-        let hinode = inos(hardlink)?;
-        if hinode != inode && hinode.0 == inode.0 {
+        let hinode = get_file_id(hardlink).path_ctx(hardlink)?;
+        if hinode != inode && get_device_id(hinode) == get_device_id(inode) {
             debug!(
                 "{}ing {} and {}",
                 config.strategy,
@@ -183,7 +209,7 @@ fn file_hardlinks(config: &Config, path: &Path, hardlinks: &[&PathBuf]) -> Resul
             if !config.dry_run {
                 std::fs::remove_file(hardlink).path_ctx(hardlink)?;
                 match config.strategy {
-                    Strategy::SymLink => ufs::symlink(path, hardlink).path_ctx(path)?,
+                    Strategy::SymLink => crossplatform_symlink(path, hardlink).path_ctx(path)?,
                     Strategy::HardLink => fs::hard_link(path, hardlink).path_ctx(path)?,
                     Strategy::RefLink => reflink_copy::reflink(path, hardlink).path_ctx(path)?,
                 }
@@ -232,13 +258,4 @@ pub fn glob_to_files(globs: &[String]) -> Result<Vec<PathBuf>> {
     res.par_sort();
     res.dedup();
     Ok(res)
-}
-
-/// returns the inodes of the partition and of the file
-fn inos(path: &Path) -> Result<(u64, u64)> {
-    Ok(inos_m(&fs::metadata(path).path_ctx(path)?))
-}
-
-fn inos_m(metadata: &fs::Metadata) -> (u64, u64) {
-    (metadata.dev(), metadata.ino())
 }
